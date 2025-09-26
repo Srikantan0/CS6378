@@ -55,4 +55,28 @@ public class parser {
         }
     }
 
+    public int getNumOfNodes() {
+        return numOfNodes;
+    }
+
+    public int getMinPerActive() {
+        return minPerActive;
+    }
+
+    public int getMaxPerActive() {
+        return maxPerActive;
+    }
+
+    public int getMinSendDelay() {
+        return minSendDelay;
+    }
+
+    public int getSnapshotDelay() {
+        return snapshotDelay;
+    }
+
+    public int getMaxNumberOfMessages() {
+        return maxNumberOfMessages;
+    }
+
 }

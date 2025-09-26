@@ -18,17 +18,29 @@ class parserTest {
         Path tempFile = Files.createTempFile("testparser", ".txt");
 
         String content = """
-            5 1 3 100 2000 10
+            5 6 10 100 2000 15
             """;
 
         try (FileWriter writer = new FileWriter(tempFile.toFile())) {
             writer.write(content);
         }
 
-        parser cfg = new parser();
-        cfg.loadFromFile(tempFile.toString());
+        parser p = new parser();
+        p.loadFromFile(tempFile.toString());
 
-        System.out.println(p);
+        int rec_numOfNodes = p.getNumOfNodes();
+        int rec_minPerActive = p.getMinPerActive();
+        int rec_maxPerActive = p.getMaxPerActive();
+        int rec_minSendDelay = p.getMinSendDelay();
+        int rec_snapshotDelay = p.getSnapshotDelay();
+        int rec_maxNumberOfMessages = p.getMaxNumberOfMessages();
+
+        assertEquals(5, rec_numOfNodes);
+        assertEquals(6, rec_minPerActive);
+        assertEquals(10, rec_maxPerActive);
+        assertEquals(100, rec_minSendDelay);
+        assertEquals( 2000, rec_snapshotDelay);
+        assertEquals(15, rec_maxNumberOfMessages);
 
         Files.deleteIfExists(tempFile);
     }
