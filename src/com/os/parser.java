@@ -41,6 +41,7 @@ public class parser {
                     this.maxPerActive = Integer.parseInt(inputTokens[2]);
                     this.minSendDelay = Integer.parseInt(inputTokens[3]);
                     this.snapshotDelay = Integer.parseInt(inputTokens[4]);
+                    this.maxNumberOfMessages = Integer.parseInt(inputTokens[5]);
                 }
                 else {
                     //todo: need to implement
