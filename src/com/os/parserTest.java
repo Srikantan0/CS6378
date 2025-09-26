@@ -44,4 +44,68 @@ class parserTest {
 
         Files.deleteIfExists(tempFile);
     }
+
+    @Test
+    public void testInvalidSystemConfigShouldReturn0() throws IOException {
+        Path tempFile = Files.createTempFile("testparser", ".txt");
+
+        String content = """
+            this config is invalid
+            """;
+
+        try (FileWriter writer = new FileWriter(tempFile.toFile())) {
+            writer.write(content);
+        }
+
+        parser p = new parser();
+        p.loadFromFile(tempFile.toString());
+
+        int rec_numOfNodes = p.getNumOfNodes();
+        int rec_minPerActive = p.getMinPerActive();
+        int rec_maxPerActive = p.getMaxPerActive();
+        int rec_minSendDelay = p.getMinSendDelay();
+        int rec_snapshotDelay = p.getSnapshotDelay();
+        int rec_maxNumberOfMessages = p.getMaxNumberOfMessages();
+
+        assertEquals(0, rec_numOfNodes);
+        assertEquals(0, rec_minPerActive);
+        assertEquals(0, rec_maxPerActive);
+        assertEquals(0, rec_minSendDelay);
+        assertEquals( 0, rec_snapshotDelay);
+        assertEquals(0, rec_maxNumberOfMessages);
+
+        Files.deleteIfExists(tempFile);
+    }
+
+    @Test
+    public void testInvalidSystemConfig() throws IOException {
+        Path tempFile = Files.createTempFile("testparser", ".txt");
+
+        String content = """
+            this config is invalid
+            """;
+
+        try (FileWriter writer = new FileWriter(tempFile.toFile())) {
+            writer.write(content);
+        }
+
+        parser p = new parser();
+        p.loadFromFile(tempFile.toString());
+
+        int rec_numOfNodes = p.getNumOfNodes();
+        int rec_minPerActive = p.getMinPerActive();
+        int rec_maxPerActive = p.getMaxPerActive();
+        int rec_minSendDelay = p.getMinSendDelay();
+        int rec_snapshotDelay = p.getSnapshotDelay();
+        int rec_maxNumberOfMessages = p.getMaxNumberOfMessages();
+
+        assertEquals(0, rec_numOfNodes);
+        assertEquals(0, rec_minPerActive);
+        assertEquals(0, rec_maxPerActive);
+        assertEquals(0, rec_minSendDelay);
+        assertEquals( 0, rec_snapshotDelay);
+        assertEquals(0, rec_maxNumberOfMessages);
+
+        Files.deleteIfExists(tempFile);
+    }
 }

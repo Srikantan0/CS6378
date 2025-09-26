@@ -23,7 +23,6 @@ public class parser {
     public void loadFromFile(String path) {
         try (BufferedReader r = new BufferedReader(new FileReader(path))){
             String line;
-            int numOfValidLines = 0;
             int numOfLines = 0;
 
             while((line = r.readLine()) != null) { // readung lines till the parser reads no line
