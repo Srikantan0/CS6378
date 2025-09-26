@@ -78,11 +78,12 @@ class parserTest {
     }
 
     @Test
-    public void testInvalidSystemConfig() throws IOException {
+    public void testInvalidSystemConfigIgnoreIt() throws IOException {
         Path tempFile = Files.createTempFile("testparser", ".txt");
 
         String content = """
             this config is invalid
+            1 2 3 4 5 6
             """;
 
         try (FileWriter writer = new FileWriter(tempFile.toFile())) {
@@ -99,12 +100,12 @@ class parserTest {
         int rec_snapshotDelay = p.getSnapshotDelay();
         int rec_maxNumberOfMessages = p.getMaxNumberOfMessages();
 
-        assertEquals(0, rec_numOfNodes);
-        assertEquals(0, rec_minPerActive);
-        assertEquals(0, rec_maxPerActive);
-        assertEquals(0, rec_minSendDelay);
-        assertEquals( 0, rec_snapshotDelay);
-        assertEquals(0, rec_maxNumberOfMessages);
+        assertEquals(1, rec_numOfNodes);
+        assertEquals(2, rec_minPerActive);
+        assertEquals(3, rec_maxPerActive);
+        assertEquals(4, rec_minSendDelay);
+        assertEquals( 5, rec_snapshotDelay);
+        assertEquals(6, rec_maxNumberOfMessages);
 
         Files.deleteIfExists(tempFile);
     }
