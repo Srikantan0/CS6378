@@ -109,4 +109,37 @@ class parserTest {
 
         Files.deleteIfExists(tempFile);
     }
+
+    @Test
+    public void testSysVconfigWithComments() throws IOException {
+        Path tempFile = Files.createTempFile("testparser", ".txt");
+
+        String content = """
+            this config is invalid
+            1 2 3 4 5 6 # this is also ignored
+            """;
+
+        try (FileWriter writer = new FileWriter(tempFile.toFile())) {
+            writer.write(content);
+        }
+
+        parser p = new parser();
+        p.loadFromFile(tempFile.toString());
+
+        int rec_numOfNodes = p.getNumOfNodes();
+        int rec_minPerActive = p.getMinPerActive();
+        int rec_maxPerActive = p.getMaxPerActive();
+        int rec_minSendDelay = p.getMinSendDelay();
+        int rec_snapshotDelay = p.getSnapshotDelay();
+        int rec_maxNumberOfMessages = p.getMaxNumberOfMessages();
+
+        assertEquals(1, rec_numOfNodes);
+        assertEquals(2, rec_minPerActive);
+        assertEquals(3, rec_maxPerActive);
+        assertEquals(4, rec_minSendDelay);
+        assertEquals( 5, rec_snapshotDelay);
+        assertEquals(6, rec_maxNumberOfMessages);
+
+        Files.deleteIfExists(tempFile);
+    }
 }
