@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class parser {
     private int numOfNodes;
@@ -13,10 +15,8 @@ public class parser {
     private int snapshotDelay;
     private int maxNumberOfMessages;
 
-    private int nodeId;
-    private String hostName;
-    private  int port;
 
+    private List<Node> nodesInNetwork = new ArrayList<Node>();
 
     public parser() {}
 
@@ -43,7 +43,16 @@ public class parser {
                     this.maxNumberOfMessages = Integer.parseInt(inputTokens[5]);
                 }
                 else {
-                    //todo: need to implement
+                    //input shoudl have n lines of node vconfiguration with host and port
+                    for(int i = 0; i <= numOfNodes; i++){
+                        Node nodeConfig = new Node(
+                                Integer.parseInt(inputTokens[0]),
+                                inputTokens[1],
+                                Integer.parseInt(inputTokens[2])
+                        );
+                        this.nodesInNetwork.add(nodeConfig);
+                        numOfLines += 1;
+                    }
                 }
                 numOfLines++;
 
@@ -77,6 +86,10 @@ public class parser {
 
     public int getMaxNumberOfMessages() {
         return maxNumberOfMessages;
+    }
+
+    public List<Node> getAllNodesConfigs(){
+        return nodesInNetwork;
     }
 
 }

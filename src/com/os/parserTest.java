@@ -6,6 +6,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -25,7 +27,6 @@ class parserTest {
             writer.write(content);
         }
 
-        parser p = new parser();
         p.loadFromFile(tempFile.toString());
 
         int rec_numOfNodes = p.getNumOfNodes();
@@ -57,7 +58,6 @@ class parserTest {
             writer.write(content);
         }
 
-        parser p = new parser();
         p.loadFromFile(tempFile.toString());
 
         int rec_numOfNodes = p.getNumOfNodes();
@@ -89,8 +89,6 @@ class parserTest {
         try (FileWriter writer = new FileWriter(tempFile.toFile())) {
             writer.write(content);
         }
-
-        parser p = new parser();
         p.loadFromFile(tempFile.toString());
 
         int rec_numOfNodes = p.getNumOfNodes();
@@ -111,7 +109,7 @@ class parserTest {
     }
 
     @Test
-    public void testSysVconfigWithComments() throws IOException {
+    public void testSysConfigWithComments() throws IOException {
         Path tempFile = Files.createTempFile("testparser", ".txt");
 
         String content = """
@@ -123,7 +121,6 @@ class parserTest {
             writer.write(content);
         }
 
-        parser p = new parser();
         p.loadFromFile(tempFile.toString());
 
         int rec_numOfNodes = p.getNumOfNodes();
@@ -139,6 +136,30 @@ class parserTest {
         assertEquals(4, rec_minSendDelay);
         assertEquals( 5, rec_snapshotDelay);
         assertEquals(6, rec_maxNumberOfMessages);
+
+        Files.deleteIfExists(tempFile);
+    }
+
+    @Test
+    public void dummyTest() throws IOException {
+        Path tempFile = Files.createTempFile("testparser", ".txt");
+
+        String content = """
+            this config is invalid
+            1 2 3 4 5 6 # this is also ignored
+            1 dc01.utd.edu 1111
+            """;
+
+        try (FileWriter writer = new FileWriter(tempFile.toFile())) {
+            writer.write(content);
+        }
+
+        p.loadFromFile(tempFile.toString());
+
+        List<Node> rec_nodesInNetwork = p.getAllNodesConfigs();
+        List<Node> expected = List.of(new Node(1, "dc01.utd.edu", 1111));
+
+        assert(expected.equals(rec_nodesInNetwork));
 
         Files.deleteIfExists(tempFile);
     }
