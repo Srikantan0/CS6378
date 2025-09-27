@@ -53,7 +53,7 @@ public class parser {
                         );
                         this.nodesInNetwork.add(nodeConfig);
                 }
-                else if (numOfLines > numOfNodes && numOfLines <= 2 * numOfNodes) {
+                else if (numOfLines > numOfNodes && numOfLines <= 2 * numOfNodes) { //to read only next 'n' lines of network toplogy
                     List<Integer> neighborsOfNode = new ArrayList<>();
                     for (int i = 1; i < inputTokens.length; i++) {
                         neighborsOfNode.add(Integer.parseInt(inputTokens[i]));
