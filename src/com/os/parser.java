@@ -5,7 +5,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class parser {
     private int numOfNodes;
@@ -15,8 +17,8 @@ public class parser {
     private int snapshotDelay;
     private int maxNumberOfMessages;
 
-
     private List<Node> nodesInNetwork = new ArrayList<Node>();
+    private Map<Integer, List<Integer>> nodeNeighbotTopology = new HashMap<>();
 
     public parser() {}
 
@@ -51,8 +53,15 @@ public class parser {
                         );
                         this.nodesInNetwork.add(nodeConfig);
                 }
-                numOfLines++;
+                else if (numOfLines > numOfNodes && numOfLines <= 2 * numOfNodes) {
+                    List<Integer> neighborsOfNode = new ArrayList<>();
+                    for (int i = 1; i < inputTokens.length; i++) {
+                        neighborsOfNode.add(Integer.parseInt(inputTokens[i]));
+                    }
+                    nodeNeighbotTopology.put(Integer.parseInt(inputTokens[0]), neighborsOfNode);
+                }
 
+                numOfLines++;
             }
         } catch (FileNotFoundException e) {
             System.out.println("File not found: " + path);
@@ -87,6 +96,10 @@ public class parser {
 
     public List<Node> getAllNodesConfigs(){
         return nodesInNetwork;
+    }
+
+    public Map<Integer,List<Integer>> getNeighbors(){
+        return nodeNeighbotTopology;
     }
 
 }

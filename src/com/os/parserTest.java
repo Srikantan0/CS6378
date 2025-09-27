@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -192,4 +193,30 @@ class parserTest {
 
         Files.deleteIfExists(tempFile);
     }
+
+    @Test
+    public void testWhenConfigHasNeighbors() throws IOException {
+        Path tempFile = Files.createTempFile("testparser", ".txt");
+
+        String content = """
+            2 2 3 4 5 6 # this is also ignored
+            1 dc01.utd.edu 1111
+            2 dc02.utd.edu 2222
+            
+            1 2
+            2 1
+            """;
+
+        try (FileWriter writer = new FileWriter(tempFile.toFile())) {
+            writer.write(content);
+        }
+
+        p.loadFromFile(tempFile.toString());
+
+        Map<Integer, List<Integer>> expected =  Map.of(1, List.of(2), 2, List.of(1));
+        assertEquals(expected, p.getNeighbors());
+
+        Files.deleteIfExists(tempFile);
+    }
+
 }
