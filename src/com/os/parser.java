@@ -44,7 +44,7 @@ public class parser {
                 }
                 else {
                     //input shoudl have n lines of node vconfiguration with host and port
-                    for(int i = 0; i <= numOfNodes; i++){
+                    for(int i = 1; i <= numOfNodes; i++){
                         Node nodeConfig = new Node(
                                 Integer.parseInt(inputTokens[0]),
                                 inputTokens[1],

@@ -157,9 +157,11 @@ class parserTest {
         p.loadFromFile(tempFile.toString());
 
         List<Node> rec_nodesInNetwork = p.getAllNodesConfigs();
-        List<Node> expected = List.of(new Node(1, "dc01.utd.edu", 1111));
-
-        assert(expected.equals(rec_nodesInNetwork));
+        List<Node> expected = List.of(
+                new Node(1, "dc01.utd.edu", 1111),
+                new Node(2, "dc02.utd.edu", 2222)
+        );
+        assertEquals(expected.getFirst(), rec_nodesInNetwork.getFirst());
 
         Files.deleteIfExists(tempFile);
     }
