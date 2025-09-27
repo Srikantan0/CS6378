@@ -42,17 +42,14 @@ public class parser {
                     this.snapshotDelay = Integer.parseInt(inputTokens[4]);
                     this.maxNumberOfMessages = Integer.parseInt(inputTokens[5]);
                 }
-                else {
+                else if(numOfLines <= numOfNodes){
                     //input shoudl have n lines of node vconfiguration with host and port
-                    for(int i = 1; i <= numOfNodes; i++){
                         Node nodeConfig = new Node(
                                 Integer.parseInt(inputTokens[0]),
                                 inputTokens[1],
                                 Integer.parseInt(inputTokens[2])
                         );
                         this.nodesInNetwork.add(nodeConfig);
-                        numOfLines += 1;
-                    }
                 }
                 numOfLines++;
 

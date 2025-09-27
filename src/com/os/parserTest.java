@@ -165,4 +165,31 @@ class parserTest {
 
         Files.deleteIfExists(tempFile);
     }
+
+    @Test
+    public void testWhenConfigHasMoreThanOneNode() throws IOException {
+        Path tempFile = Files.createTempFile("testparser", ".txt");
+
+        String content = """
+            2 2 3 4 5 6 # this is also ignored
+            1 dc01.utd.edu 1111
+            2 dc02.utd.edu 2222
+            """;
+
+        try (FileWriter writer = new FileWriter(tempFile.toFile())) {
+            writer.write(content);
+        }
+
+        p.loadFromFile(tempFile.toString());
+
+        List<Node> rec_nodesInNetwork = p.getAllNodesConfigs();
+        List<Node> expected = List.of(
+                new Node(1, "dc01.utd.edu", 1111),
+                new Node(2, "dc02.utd.edu", 2222)
+        );
+        assertEquals(expected.getFirst(), rec_nodesInNetwork.getFirst());
+        assertEquals(expected.get(1), rec_nodesInNetwork.get(1));
+
+        Files.deleteIfExists(tempFile);
+    }
 }
