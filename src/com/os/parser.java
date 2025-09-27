@@ -20,52 +20,53 @@ public class parser {
     private List<Node> nodesInNetwork = new ArrayList<Node>();
     private Map<Integer, List<Integer>> nodeNeighbotTopology = new HashMap<>();
 
-    public parser() {}
+    public parser() {
+    }
 
     public void loadFromFile(String path) {
-        try (BufferedReader r = new BufferedReader(new FileReader(path))){
+        try (BufferedReader r = new BufferedReader(new FileReader(path))) {
             String line;
             int numOfLines = 0;
 
-            while((line = r.readLine()) != null) { // readung lines till the parser reads no line
+            while ((line = r.readLine()) != null) { // readung lines till the parser reads no line
                 line = line.trim();
 
-                if (line.isEmpty() || !Character.isDigit(line.charAt(0))){
+                if (line.isEmpty() || !Character.isDigit(line.charAt(0))) {
                     continue;
                 }
 
                 String[] inputTokens = line.split("\\s+");
 
-                if(numOfLines == 0) {               // try to read only the first line and print -> this is how i config my system
+                if (numOfLines == 0) {               // try to read only the first line and print -> this is how i config my system
                     this.numOfNodes = Integer.parseInt(inputTokens[0]);
                     this.minPerActive = Integer.parseInt(inputTokens[1]);
                     this.maxPerActive = Integer.parseInt(inputTokens[2]);
                     this.minSendDelay = Integer.parseInt(inputTokens[3]);
                     this.snapshotDelay = Integer.parseInt(inputTokens[4]);
                     this.maxNumberOfMessages = Integer.parseInt(inputTokens[5]);
-                }
-                else if(numOfLines <= numOfNodes){
+                } else if (numOfLines <= numOfNodes) {
                     //input shoudl have n lines of node vconfiguration with host and port
-                        Node nodeConfig = new Node(
-                                Integer.parseInt(inputTokens[0]),
-                                inputTokens[1],
-                                Integer.parseInt(inputTokens[2])
-                        );
-                        this.nodesInNetwork.add(nodeConfig);
-                }
-                else if (numOfLines > numOfNodes && numOfLines <= 2 * numOfNodes) { //to read only next 'n' lines of network toplogy
+                    Node nodeConfig = new Node(
+                            Integer.parseInt(inputTokens[0]),
+                            inputTokens[1],
+                            Integer.parseInt(inputTokens[2])
+                    );
+                    this.nodesInNetwork.add(nodeConfig);
+                } else if (numOfLines > numOfNodes && numOfLines <= 2 * numOfNodes) { //to read only next 'n' lines of network toplogy
+                    int idxNode = numOfLines - numOfNodes - 1;
+                    int currentNodeId = nodesInNetwork.get(idxNode).getNodeId();
                     List<Integer> neighborsOfNode = new ArrayList<>();
-                    for (int i = 1; i < inputTokens.length; i++) {
+                    for (int i = 0; i < inputTokens.length; i++) {
                         neighborsOfNode.add(Integer.parseInt(inputTokens[i]));
                     }
-                    nodeNeighbotTopology.put(Integer.parseInt(inputTokens[0]), neighborsOfNode);
+                    nodeNeighbotTopology.put(currentNodeId, neighborsOfNode);
                 }
 
                 numOfLines++;
             }
         } catch (FileNotFoundException e) {
             System.out.println("File not found: " + path);
-        } catch (IOException e){
+        } catch (IOException e) {
             System.out.println("Error parsing the file: " + e.getMessage());
         }
     }
@@ -94,11 +95,11 @@ public class parser {
         return maxNumberOfMessages;
     }
 
-    public List<Node> getAllNodesConfigs(){
+    public List<Node> getAllNodesConfigs() {
         return nodesInNetwork;
     }
 
-    public Map<Integer,List<Integer>> getNeighbors(){
+    public Map<Integer, List<Integer>> getNeighbors() {
         return nodeNeighbotTopology;
     }
 
