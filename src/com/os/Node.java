@@ -7,9 +7,9 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 public class Node {
-    private int nodeId;
-    private String hostName;
-    private  int port;
+    private final int nodeId;
+    private final String hostName;
+    private final int port;
 
     private List<Node> neighbors;
     private Map<Integer, SctpChannel> sendQueue;
