@@ -1,9 +1,21 @@
 package com.os;
 
+import com.sun.nio.sctp.SctpChannel;
+
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+
 public class Node {
     private int nodeId;
     private String hostName;
     private  int port;
+
+    private List<Node> neighbors;
+    private Map<Integer, SctpChannel> sendQueue;
+    private NodeState state;
+    private int sentMessages = 0;
+    private int maxNumber;
 
     Node(int nodeId, String hostName, int port){
         this.nodeId = nodeId;
@@ -38,5 +50,29 @@ public class Node {
     @Override
     public int hashCode() {
         return java.util.Objects.hash(nodeId, hostName, port);
+    }
+
+    public NodeState getState() {
+        return this.state;
+    }
+
+    public void setState(NodeState state) {
+        this.state = state;
+    }
+
+    public int getMaxNumber(){
+        return this.maxNumber;
+    }
+
+    public int getSentMessages(){
+        return this.sentMessages;
+    }
+
+    public List<Node> getNeighbors(){
+        return this.neighbors;
+    }
+
+    public void incrementSentMessages(){
+        this.sentMessages += 1;
     }
 }
