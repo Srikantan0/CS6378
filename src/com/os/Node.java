@@ -75,4 +75,8 @@ public class Node {
     public void incrementSentMessages(){
         this.sentMessages += 1;
     }
+
+    public void setMaxNumber(int maxNumber){
+        this.maxNumber = maxNumber;
+    }
 }

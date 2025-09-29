@@ -13,6 +13,10 @@ import java.net.Socket;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.*;
+import java.io.*;
+import java.net.*;
+
 class TCPServerServiceTest {
 
     private static final int TEST_PORT = 6000;
@@ -24,8 +28,7 @@ class TCPServerServiceTest {
     void setUp() throws InterruptedException {
         testNode = new Node(0, "localhost", TEST_PORT);
         testNode.setState(NodeState.PASSIVE);
-        testNode.incrementSentMessages();
-        testNode.setState(NodeState.PASSIVE);
+        testNode.setMaxNumber(1);
         server = new TCPServerService(TEST_PORT, testNode);
         serverThread = new Thread(server);
         serverThread.start();
@@ -39,7 +42,7 @@ class TCPServerServiceTest {
     }
 
     @Test
-    void testServerReceivesMessageAndSendsAck() throws IOException {
+    void testServerReceivesMessageAndNodeBecomesActive() throws IOException {
         Socket client = new Socket("localhost", TEST_PORT);
         InputStream in = client.getInputStream();
         OutputStream out = client.getOutputStream();
@@ -54,7 +57,5 @@ class TCPServerServiceTest {
 
         assertEquals("ACK", ack);
         assertEquals(NodeState.ACTIVE, testNode.getState());
-
-        client.close();
     }
 }
