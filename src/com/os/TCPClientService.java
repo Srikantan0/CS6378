@@ -33,7 +33,7 @@ public class TCPClientService implements Runnable {
     public void sendMessage(Node from, Node to, Socket socket) throws Exception {
         if (socket == null || socket.isClosed()) {
             socket = new Socket(to.getHostName(), to.getPort());
-        }
+        } // move thiss outside to producer
 
         OutputStream out = socket.getOutputStream();
         InputStream in = socket.getInputStream();

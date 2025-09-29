@@ -2,6 +2,7 @@ package com.os;
 
 import com.sun.nio.sctp.SctpChannel;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -21,6 +22,7 @@ public class Node {
         this.nodeId = nodeId;
         this.hostName = hostName;
         this.port = port;
+        this.neighbors = new ArrayList<>();
     }
 
     public int getNodeId(){
