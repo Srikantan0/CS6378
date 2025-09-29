@@ -64,4 +64,12 @@ public class ProducerConsumer {
         currentNode.setState(NodeState.PASSIVE);
         System.out.println("node now passive. ");
     }
+
+    public synchronized void consume() throws Exception {
+        TCPServerService server = new TCPServerService(currentNode.getPort(), currentNode);
+        Thread serverThread = new Thread(server);
+        serverThread.start();
+
+        System.out.println("Node " + currentNode.getNodeId() + " server listening to " + currentNode.getPort());
+    }
 }

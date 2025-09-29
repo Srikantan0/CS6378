@@ -69,4 +69,30 @@ class ProducerConsumerMultiNeighborTest {
         assertEquals(NodeState.PASSIVE, currentNode.getState());
         assertTrue(currentNode.getSentMessages() > 0);
     }
+
+    @Test
+    void testConsumerBringsUpServerInCurrentNodePortToListen() throws Exception{
+        Node node = new Node(1, "localhost", 10001);
+        node.setMaxNumber(5);
+        node.setState(NodeState.PASSIVE);
+
+        ProducerConsumer pc = new ProducerConsumer(node, 1, 3, 100);
+        pc.consume();
+        Thread.sleep(200);
+
+        Socket clientSocket = new Socket("localhost", node.getPort());
+        OutputStream out = clientSocket.getOutputStream();
+        InputStream in = clientSocket.getInputStream();
+
+        String testMessage = "testingServer";
+        out.write(testMessage.getBytes());
+
+        byte[] buf = new byte[4096];
+        int bytesRead = in.read(buf);
+        String ack = new String(buf, 0, bytesRead);
+
+        assertEquals("ACK", ack);
+        Thread.sleep(200);
+        assertEquals(NodeState.ACTIVE, node.getState());
+    }
 }
