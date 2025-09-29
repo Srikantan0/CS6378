@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class parser {
+public class Parser {
     private int numOfNodes;
     private int minPerActive;
     private int maxPerActive;
@@ -17,10 +17,10 @@ public class parser {
     private int snapshotDelay;
     private int maxNumberOfMessages;
 
-    private List<Node> nodesInNetwork = new ArrayList<Node>();
-    private Map<Integer, List<Integer>> nodeNeighbotTopology = new HashMap<>();
+    private List<Node> nodesInNetwork = new ArrayList<>();
+    private Map<Integer, List<Integer>> nodeNeighborTopology = new HashMap<>();
 
-    public parser() {
+    public Parser() {
     }
 
     public void loadFromFile(String path) {
@@ -59,7 +59,7 @@ public class parser {
                     for (int i = 0; i < inputTokens.length; i++) {
                         neighborsOfNode.add(Integer.parseInt(inputTokens[i]));
                     }
-                    nodeNeighbotTopology.put(currentNodeId, neighborsOfNode);
+                    nodeNeighborTopology.put(currentNodeId, neighborsOfNode);
                 }
 
                 numOfLines++;
@@ -100,7 +100,14 @@ public class parser {
     }
 
     public Map<Integer, List<Integer>> getNeighbors() {
-        return nodeNeighbotTopology;
+        return nodeNeighborTopology;
     }
 
+    public Node getNodeById(int nodeId){
+        return nodesInNetwork
+                .stream()
+                .filter(node -> node.getNodeId() == nodeId)
+                .findFirst().orElse(null
+        );
+    }
 }

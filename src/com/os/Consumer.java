@@ -9,7 +9,7 @@ public class Consumer implements Runnable {
 
     @Override
     public void run() {
-        TCPServerService server = new TCPServerService(currentNode);
+        TCPServer server = new TCPServer(currentNode);
         Thread serverThread = new Thread(server);
         serverThread.start();
 

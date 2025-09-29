@@ -1,7 +1,5 @@
 package com.os;
 
-import com.sun.nio.sctp.*;
-
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
@@ -9,12 +7,12 @@ import java.net.Socket;
 
 // listen on port of curr node for any incoming msg from any neighbor node
 // ack that you've recd a message
-public class TCPServerService implements Runnable {
+public class TCPServer implements Runnable {
     private static final int MAX_MSG_SIZE = 4096;
 
-    private Node node;
+    private final Node node;
 
-    public TCPServerService(Node node) {
+    public TCPServer(Node node) {
         this.node = node;
     }
 
@@ -40,7 +38,7 @@ public class TCPServerService implements Runnable {
             int bytesRead = in.read(buf);
 
             String received = new String(buf, 0, bytesRead);
-            System.out.println("Node " + node.getNodeId() + " received: " + received);
+            System.out.println("Msg recd from" + node.getNodeId() + " : " + received);
 
             out.write("ACK".getBytes());
             out.flush();

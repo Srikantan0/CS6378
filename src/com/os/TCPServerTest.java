@@ -11,16 +11,11 @@ import java.net.Socket;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.*;
-
-import java.io.*;
-import java.net.*;
-
-class TCPServerServiceTest {
+class TCPServerTest {
 
     private static final int TEST_PORT = 6000;
     private Node testNode;
-    private TCPServerService server;
+    private TCPServer server;
     private Thread serverThread;
 
     @BeforeEach
@@ -28,7 +23,7 @@ class TCPServerServiceTest {
         testNode = new Node(0, "localhost", TEST_PORT);
         testNode.setState(NodeState.PASSIVE);
         testNode.setMaxNumber(1);
-        server = new TCPServerService(testNode);
+        server = new TCPServer(testNode);
         serverThread = new Thread(server);
         serverThread.start();
 

@@ -9,7 +9,7 @@ import java.net.Socket;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class TCPClientServiceTest {
+class TCPClientTest {
 
     @Test
     void testTcpClientSnedingToServer() throws Exception {
@@ -40,7 +40,7 @@ class TCPClientServiceTest {
             }
         }).start();
 
-        TCPClientService client = new TCPClientService(from, to, null);
+        TCPClient client = new TCPClient(from, to, null);
         client.sendMessage(from, to, null);
 
         assertEquals(1, from.getSentMessages());

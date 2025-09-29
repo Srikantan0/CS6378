@@ -6,7 +6,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -14,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class parserTest {
     private Path tempFile;
-    private parser p = new parser();
+    private Parser p = new Parser();
 
     @Test
     public void testValidSystemConfig() throws IOException {

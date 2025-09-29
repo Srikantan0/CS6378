@@ -6,11 +6,11 @@ import java.util.concurrent.Executors;
 
 public class ProducerConsumer implements Runnable{
 
-    private Producer producer;
-    private Consumer consumer;
+    private final Producer producer;
+    private final Consumer consumer;
 
-    private ExecutorService producerExec;
-    private ExecutorService consumerExec;
+    private final ExecutorService producerExec;
+    private final ExecutorService consumerExec;
 
     ProducerConsumer(
             Producer producer,
@@ -25,8 +25,8 @@ public class ProducerConsumer implements Runnable{
 
     @Override
     public void run() {
-        producerExec.submit(producer);
-        consumerExec.submit(consumer);
+        producerExec.execute(producer);
+        consumerExec.execute(consumer);
     }
 
     public void start(){

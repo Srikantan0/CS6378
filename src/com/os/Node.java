@@ -1,11 +1,7 @@
 package com.os;
 
-import com.sun.nio.sctp.SctpChannel;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
 
 public class Node {
     private final int nodeId;
@@ -13,9 +9,9 @@ public class Node {
     private final int port;
 
     private List<Node> neighbors;
-    private Map<Integer, SctpChannel> sendQueue;
     private NodeState state;
     private int sentMessages = 0;
+    private int sentActiveMessages = 0;
     private int maxNumber;
 
     Node(int nodeId, String hostName, int port){
@@ -78,11 +74,20 @@ public class Node {
         this.sentMessages += 1;
     }
 
+    public int getSentActiveMessages(){
+        return this.sentActiveMessages;
+    }
+
+    public void incrementSentActiveMessages(){
+        this.sentActiveMessages += 1;
+    }
+
+    public void resetSentActiveMessages(){
+        this.sentActiveMessages = 0;
+    }
+
     public void setMaxNumber(int maxNumber){
         this.maxNumber = maxNumber;
     }
 
-    public void setNeighbors(List<Node> neighbors) {
-        this.neighbors = neighbors;
-    }
 }
