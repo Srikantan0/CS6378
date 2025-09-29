@@ -81,4 +81,8 @@ public class Node {
     public void setMaxNumber(int maxNumber){
         this.maxNumber = maxNumber;
     }
+
+    public void setNeighbors(List<Node> neighbors) {
+        this.neighbors = neighbors;
+    }
 }

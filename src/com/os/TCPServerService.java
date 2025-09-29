@@ -31,7 +31,7 @@ public class TCPServerService implements Runnable {
 
     public void startServer(int port, Node node) throws Exception {
         ServerSocket serverSocket = new ServerSocket(port);
-        System.out.println("TCP Server listening -> port " + port);
+        System.out.println("node "+ node.getNodeId()+"'s tcp server up on" + port);
 
         while (true) {
             Socket socket = serverSocket.accept();

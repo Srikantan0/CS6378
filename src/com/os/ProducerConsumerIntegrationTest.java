@@ -1,7 +1,10 @@
 package com.os;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ProducerConsumerIntegrationTest {
@@ -70,5 +73,54 @@ public class ProducerConsumerIntegrationTest {
 
         Thread.sleep(300);
         assertEquals(NodeState.ACTIVE, serverNode.getState());
+    }
+
+    @Test @Disabled
+    public void testFullyConnectedMesh() throws Exception {
+        int numNodes = 4;
+        int basePort = 8200;
+        List<Node> nodes = new ArrayList<>();
+        List<ProducerConsumer> pcs = new ArrayList<>();
+        for (int i = 0; i < numNodes; i++) {
+            Node node = new Node(i, "localhost", basePort + i);
+            node.setMaxNumber(10);
+            node.setState(i == 0 ? NodeState.ACTIVE : NodeState.PASSIVE);
+            nodes.add(node);
+        }
+
+        for (Node node : nodes) {
+            List<Node> neighbors = new ArrayList<>(nodes);
+            neighbors.remove(node);
+            node.getNeighbors().addAll(neighbors);
+        }
+
+        for (Node node : nodes) {
+            ProducerConsumer pc = new ProducerConsumer(node, 1, 3, 50);
+            pcs.add(pc);
+            pc.consume();
+        }
+
+        Thread.sleep(500);
+
+        List<Thread> clients = new ArrayList<>();
+        for (ProducerConsumer pc : pcs) {
+            Thread t = new Thread(() -> {
+                try {
+                    pc.produce();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            clients.add(t);
+            t.start();
+        }
+
+        for (Thread t : clients) {
+            t.join();
+        }
+
+        boolean anyNodeActive = nodes.stream().anyMatch(n -> n.getState() == NodeState.ACTIVE);
+
+        assertTrue(nodes.stream().anyMatch(n -> n.getSentMessages() > 0));
     }
 }

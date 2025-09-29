@@ -26,7 +26,7 @@ public class ProducerConsumer {
 
     public synchronized void produce() throws Exception {
         if (currentNode.getState() != NodeState.ACTIVE) {
-            System.out.println("node passive, cant send. ");
+            System.out.println("node "+currentNode.getNodeId()+" passive, cant send. ");
             return;
         }
 
@@ -70,6 +70,6 @@ public class ProducerConsumer {
         Thread serverThread = new Thread(server);
         serverThread.start();
 
-        System.out.println("Node " + currentNode.getNodeId() + " server listening to " + currentNode.getPort());
+        System.out.println("node " + currentNode.getNodeId() + "'s server up on " + currentNode.getPort());
     }
 }
