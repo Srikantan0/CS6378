@@ -2,7 +2,6 @@ package com.os;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.*;
 
 public class ProducerConsumer {
@@ -41,7 +40,8 @@ public class ProducerConsumer {
                     socket = new Socket(neighbor.getHostName(), neighbor.getPort());
                     connections.put(neighbor, socket);
                 }
-            } catch (IOException _) { }
+            } catch (IOException _) {
+            }
         }
         List<Node> nodes = new ArrayList<>(connections.keySet());
         for (int i = 0; i < numMessages; i++) {
@@ -62,7 +62,7 @@ public class ProducerConsumer {
         }
 
         currentNode.setState(NodeState.PASSIVE);
-        System.out.println("node now passive. ");
+        System.out.println("node"+ currentNode.getNodeId()+" now passive. ");
     }
 
     public synchronized void consume() throws Exception {
