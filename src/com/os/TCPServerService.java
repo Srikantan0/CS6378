@@ -12,26 +12,24 @@ import java.net.Socket;
 public class TCPServerService implements Runnable {
     private static final int MAX_MSG_SIZE = 4096;
 
-    private int port;
     private Node node;
 
-    public TCPServerService(int port, Node node) {
-        this.port = port;
+    public TCPServerService(Node node) {
         this.node = node;
     }
 
     @Override
     public void run() {
         try {
-            startServer(port, node);
+            startServer(node);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void startServer(int port, Node node) throws Exception {
-        ServerSocket serverSocket = new ServerSocket(port);
-        System.out.println("node "+ node.getNodeId()+"'s tcp server up on" + port);
+    public void startServer(Node node) throws Exception {
+        ServerSocket serverSocket = new ServerSocket(node.getPort());
+        System.out.println("node "+ node.getNodeId()+"'s tcp server up on" + node.getPort());
 
         while (true) {
             Socket socket = serverSocket.accept();

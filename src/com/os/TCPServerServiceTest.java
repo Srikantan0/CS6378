@@ -28,7 +28,7 @@ class TCPServerServiceTest {
         testNode = new Node(0, "localhost", TEST_PORT);
         testNode.setState(NodeState.PASSIVE);
         testNode.setMaxNumber(1);
-        server = new TCPServerService(TEST_PORT, testNode);
+        server = new TCPServerService(testNode);
         serverThread = new Thread(server);
         serverThread.start();
 
