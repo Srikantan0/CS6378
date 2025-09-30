@@ -37,7 +37,7 @@ public class Producer implements Runnable{
             if (i < numMessages - 1) {
                 try {
                     Thread.sleep(minSendDelay);
-                } catch (InterruptedException _) { }
+                } catch (InterruptedException ie) { }
             }
         }
 

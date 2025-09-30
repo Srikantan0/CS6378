@@ -30,7 +30,7 @@ public class TCPClient implements Runnable {
     public void sendMessage(Node from, Node to, Socket socket) throws Exception {
         try {
             socket = new Socket(to.getHostName(), to.getPort());
-        } catch (IOException _) {
+        } catch (IOException ioe) {
             return;
         }
 
