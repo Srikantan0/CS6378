@@ -11,6 +11,7 @@ public class Main {
 
         Parser parser = new Parser();
         parser.loadFromFile(filePath);
+        parser.connectToNeighborasFromCOnfig();
 
         Node currNode = parser.getNodeById(currNodeId);
         if(currNode == null){
@@ -21,7 +22,7 @@ public class Main {
         int maxPerActive = parser.getMaxPerActive();
         int minSendDelay = parser.getMinSendDelay();
 
-        Producer producer = new Producer(currNode, minPerActive, minSendDelay);
+        Producer producer = new Producer(currNode, minPerActive, maxPerActive,minSendDelay);
         Consumer consumer = new Consumer(currNode);
 
         ProducerConsumer pc = new ProducerConsumer(producer, consumer);

@@ -4,11 +4,13 @@ import java.util.*;
 public class Producer implements Runnable{
     Node currentNode;
     int minPerActive;
+    int maxPerActive;
     int minSendDelay;
 
-    Producer(Node currentNode, int minPerActive, int minSendDelay){
+    Producer(Node currentNode, int minPerActive, int maxPerActive,int minSendDelay){
         this.currentNode = currentNode;
         this.minPerActive = minPerActive;
+        this.maxPerActive = maxPerActive;
         this.minSendDelay = minSendDelay;
     }
 
@@ -19,8 +21,11 @@ public class Producer implements Runnable{
             System.out.println("node "+currentNode.getNodeId()+" passive, cant send. ");
             return;
         }
-
-        int numMessages = minPerActive + 1;
+        try {
+            Thread.sleep(20000);
+        } catch (InterruptedException e) {
+        }
+        int numMessages = random.nextInt(maxPerActive - minPerActive + 1) + minPerActive;
         List<Node> neighbors = currentNode.getNeighbors();
 
         for (int i = 0; i < numMessages; i++) {

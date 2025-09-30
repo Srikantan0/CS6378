@@ -9,7 +9,7 @@ public class Node {
     private final int port;
 
     private List<Node> neighbors;
-    private NodeState state;
+    private NodeState state = NodeState.ACTIVE;
     private int sentMessages = 0;
     private int sentActiveMessages = 0;
     private int maxNumber;

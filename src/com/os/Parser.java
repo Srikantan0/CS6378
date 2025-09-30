@@ -51,6 +51,7 @@ public class Parser {
                             inputTokens[1],
                             Integer.parseInt(inputTokens[2])
                     );
+                    nodeConfig.setMaxNumber(this.maxNumberOfMessages);
                     this.nodesInNetwork.add(nodeConfig);
                 } else if (numOfLines > numOfNodes && numOfLines <= 2 * numOfNodes) { //to read only next 'n' lines of network toplogy
                     int idxNode = numOfLines - numOfNodes - 1;
@@ -68,6 +69,23 @@ public class Parser {
             System.out.println("File not found: " + path);
         } catch (IOException e) {
             System.out.println("Error parsing the file: " + e.getMessage());
+        }
+    }
+
+    public void connectToNeighborasFromCOnfig() {
+        for (Node node : nodesInNetwork) {
+            List<Integer> neighborNodeIds = nodeNeighborTopology.get(node.getNodeId());
+            List<Node> neighborNodes = new ArrayList<>();
+            if (neighborNodeIds != null) {
+                for (int neighborNodeId : neighborNodeIds) {
+                    Node neighbor = getNodeById(neighborNodeId);
+                    if (neighbor != null) {
+                        neighborNodes.add(neighbor);
+                    }
+                }
+            }
+            node.getNeighbors().clear();
+            node.getNeighbors().addAll(neighborNodes);
         }
     }
 
