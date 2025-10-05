@@ -9,7 +9,10 @@ import java.io.ByteArrayOutputStream;
 
 // Enumeration to store message types
 enum MessageType{
-    string
+    string,
+    APP,        // this and string should be matched i.e both will become same
+    MARKER,     // init a snapshot with a marker
+    STATE       // record and send
 };
 
 // Object to store message passing between nodes
@@ -27,6 +30,22 @@ public class Message implements Serializable
         msgType = MessageType.string;
         message = msg;
     }
+
+    public int fromNodeId;
+    public int toNodeId;
+    public Object messageInfo;
+
+    public Message(int fromNodeId, int toNodeId, String message){
+        this.msgType = MessageType.APP;
+        this.fromNodeId = fromNodeId;
+        this.toNodeId = toNodeId;
+        this.messageInfo = message;
+    }
+
+    public Message(MessageType type, int fromNodeId) {
+    this.msgType = type;
+    this.fromNodeId = fromNodeId;
+}
 
     // Convert current instance of Message to ByteBuffer in order to send message over SCTP
     public ByteBuffer toByteBuffer() throws Exception
