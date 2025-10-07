@@ -14,6 +14,7 @@ public class Main {
         parser.connectToNeighborasFromCOnfig();
 
         Node currNode = parser.getNodeById(currNodeId);
+        currNode.initClock(parser.getNumOfNodes());
         if(currNode == null){
             System.out.println("Input node doesnt match configuration. please check");
             return;
@@ -27,6 +28,9 @@ public class Main {
 
         ProducerConsumer pc = new ProducerConsumer(producer, consumer);
         pc.start();
+        // snapshotProc = new ChandyLamport()
+        // snapshotProc.start()
         Runtime.getRuntime().addShutdownHook(new Thread(pc::close));
+        //Runtime.getRuntime().addShutdownHook(new Thread(snapshotProc::close));
     }
 }

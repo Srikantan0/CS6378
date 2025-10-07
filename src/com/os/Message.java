@@ -9,7 +9,6 @@ import java.io.ByteArrayOutputStream;
 
 // Enumeration to store message types
 enum MessageType{
-    string,
     APP,        // this and string should be matched i.e both will become same
     MARKER,     // init a snapshot with a marker
     STATE       // record and send
@@ -23,11 +22,12 @@ public class Message implements Serializable
 {
     MessageType msgType;
     public String message;
+    public int snapshotId;
 
     // Constructor
     public Message(String msg)
     {
-        msgType = MessageType.string;
+        msgType = MessageType.APP;
         message = msg;
     }
 

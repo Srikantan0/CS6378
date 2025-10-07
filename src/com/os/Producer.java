@@ -22,7 +22,7 @@ public class Producer implements Runnable{
             return;
         }
         try {
-            Thread.sleep(20000);
+            Thread.sleep(5000);
         } catch (InterruptedException e) {
         }
         int numMessages = random.nextInt(maxPerActive - minPerActive + 1) + minPerActive;

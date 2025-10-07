@@ -1,8 +1,6 @@
 package com.os;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
 
 public class TCPClient implements Runnable {
@@ -34,20 +32,50 @@ public class TCPClient implements Runnable {
             return;
         }
 
-        OutputStream out = socket.getOutputStream();
-        InputStream in = socket.getInputStream();
+        from.incrementVectorClock();
+        OutputStream os = socket.getOutputStream();
+        InputStream is = socket.getInputStream();
+        ObjectOutputStream out = new ObjectOutputStream(os);
+        ObjectInputStream in = new ObjectInputStream(is);
 
-        String message = "Node " +from.getNodeId()+" sending to " + to.getNodeId();
-        out.write(message.getBytes());
+        String message = "MSG from Node " + from.getNodeId() + " to " + to.getNodeId();
+        Message msg = new Message(from.getNodeId(), to.getNodeId(), message);
+        msg.messageInfo = from.getVectorClock();
+
+        out.writeObject(msg);
         out.flush();
 
-        byte[] buf = new byte[MAX_MSG_SIZE];
-        int ipBytes = in.read(buf);
-        String ack = new String(buf, 0, ipBytes);
-
-        System.out.println("ACK'd': " + ack);
+        Object ack = in.readObject();
+        System.out.println("ACK'd': " + ack.toString());
 
         from.incrementSentMessages();
         from.incrementSentActiveMessages();
     }
 }
+
+/// public void sendMessage(Node from, Node to, Socket socket) throws Exception {
+///         try {
+///             socket = new Socket(to.getHostName(), to.getPort());
+///         } catch (IOException ioe) {
+///             return;
+///         }
+///
+///         from.incrementVectorClock();
+///         OutputStream os = socket.getOutputStream();
+///         InputStream is = socket.getInputStream();
+///         ObjectOutputStream out = new ObjectOutputStream(os);
+///         ObjectInputStream in = new ObjectInputStream(is);
+///
+///         String message = "MSG from Node " +from.getNodeId()+" to " + to.getNodeId() + "| "+ from.getVectorClock();
+///         Message msg = new Message(from.getNodeId(), to.getNodeId(), message);
+///         msg.messageInfo = from.getVectorClock();
+///         out.writeObject(msg);
+///         out.flush();
+///
+///         Object ack = in.readObject();
+///
+///         System.out.println("ACK'd': " + ack.toString());
+///
+///         from.incrementSentMessages();
+///         from.incrementSentActiveMessages();
+///     }

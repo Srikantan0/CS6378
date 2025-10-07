@@ -13,6 +13,7 @@ public class Node {
     private int sentMessages = 0;
     private int sentActiveMessages = 0;
     private int maxNumber;
+    private VectorClock vectorClock;
 
     Node(int nodeId, String hostName, int port){
         this.nodeId = nodeId;
@@ -88,6 +89,25 @@ public class Node {
 
     public void setMaxNumber(int maxNumber){
         this.maxNumber = maxNumber;
+    }
+
+    public void initClock(int totalNodes) {
+        this.vectorClock = new VectorClock(this.nodeId, totalNodes);
+    }
+
+    public void incrementVectorClock(){
+        this.vectorClock.increment();
+    }
+
+    public VectorClock getVectorClock() {
+        return this.vectorClock;
+    }
+    public void setVectorClock(VectorClock vectorClock) {
+        this.vectorClock = vectorClock;
+    }
+
+    public void updateClock(VectorClock other) {
+        if (vectorClock != null) vectorClock.update(other);
     }
 
 }
