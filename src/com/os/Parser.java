@@ -49,9 +49,9 @@ public class Parser {
                     Node nodeConfig = new Node(
                             Integer.parseInt(inputTokens[0]),
                             inputTokens[1],
-                            Integer.parseInt(inputTokens[2])
+                            Integer.parseInt(inputTokens[2]),
+                            this.numOfNodes
                     );
-                    nodeConfig.setVectorClock(new VectorClock(nodeConfig.getNodeId(), this.numOfNodes));
                     nodeConfig.setMaxNumber(this.maxNumberOfMessages);
                     this.nodesInNetwork.add(nodeConfig);
                 } else if (numOfLines > numOfNodes && numOfLines <= 2 * numOfNodes) { //to read only next 'n' lines of network toplogy

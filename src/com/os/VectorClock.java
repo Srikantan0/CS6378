@@ -1,10 +1,16 @@
 package com.os;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
-public class VectorClock extends Clock {
+public class VectorClock extends Clock implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     private final int[] clock;  // vector to store timestamps
+    public VectorClock() {
+        super();
+        this.clock = new int[0]; // dummy; will be updated via deserialization
+    }
 
     public VectorClock(int pid, int numProcesses) {
         super(pid);
@@ -14,7 +20,10 @@ public class VectorClock extends Clock {
 
     @Override
     public void increment() {
-        clock[pid]++;
+        int idx = pid - 1;
+        if (idx < 0 || idx >= clock.length)
+            throw new IndexOutOfBoundsException();
+        clock[idx]++;
     }
 
     @Override
@@ -28,7 +37,7 @@ public class VectorClock extends Clock {
             this.clock[i] = Math.max(this.clock[i], otherVectorClock.clock[i]);
         }
 
-        this.clock[pid]++;
+        this.clock[pid - 1]++;
     }
 
     @Override

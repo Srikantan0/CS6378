@@ -48,7 +48,7 @@ public class TCPServer implements Runnable {
                     System.out.println("MARKER REC'd :: " + node.getNodeId());
                     // TODO: Add snapshot handling here
                 }
-                out.writeObject("ACK");
+                out.writeObject("ACK'd your VC : " + msg.messageInfo);
                 out.flush();
             if (node.getState() == NodeState.PASSIVE && node.getSentMessages() < node.getMaxNumber()) {
                     node.setState(NodeState.ACTIVE);

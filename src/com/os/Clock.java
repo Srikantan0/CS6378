@@ -6,6 +6,8 @@ public abstract class Clock {
 
     protected int pid; // process ID of the node
 
+    public Clock(){}
+
     public Clock(int pid) {
         this.pid = pid;
     }

@@ -1,9 +1,10 @@
 package com.os;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Node {
+public class Node implements Serializable {
     private final int nodeId;
     private final String hostName;
     private final int port;
@@ -15,11 +16,12 @@ public class Node {
     private int maxNumber;
     private VectorClock vectorClock;
 
-    Node(int nodeId, String hostName, int port){
+    Node(int nodeId, String hostName, int port, int totalNodes){
         this.nodeId = nodeId;
         this.hostName = hostName;
         this.port = port;
         this.neighbors = new ArrayList<>();
+        this.vectorClock = new VectorClock(nodeId, totalNodes);
     }
 
     public int getNodeId(){
