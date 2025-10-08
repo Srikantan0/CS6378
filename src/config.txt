@@ -1,5 +1,5 @@
 2 2 3 400 500 5
-1 localhost 10000
-2 localhost 10001                
-2
-1 
+0 localhost 10000
+1 localhost 10001
+1
+0

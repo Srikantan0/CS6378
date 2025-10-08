@@ -57,7 +57,7 @@ public class TCPServer implements Runnable {
                         System.out.println("Node " + node.getNodeId() + " initialized snapshot on first marker");
                     }
 
-                    if (node.getNodeId() == 0 && !node.isInSnapshot()) {
+                    if (!node.isInSnapshot()) {
                         node.initSnapshot();
                         System.out.println("Node " + node.getNodeId() + " init a snapshot");
                         for (Node neighbor : node.getNeighbors()) {

@@ -9,7 +9,7 @@ public class VectorClock extends Clock implements Serializable {
     private final int[] clock;  // vector to store timestamps
     public VectorClock() {
         super();
-        this.clock = new int[0]; // dummy; will be updated via deserialization
+        this.clock = new int[0];
     }
 
     public VectorClock(int pid, int numProcesses) {
@@ -20,14 +20,15 @@ public class VectorClock extends Clock implements Serializable {
 
     @Override
     public void increment() {
-        int idx = pid - 1;
-        if (idx < 0 || idx >= clock.length)
+        if (pid < 0 || pid >= clock.length)
             throw new IndexOutOfBoundsException();
-        clock[idx]++;
+        synchronized (clock){
+            clock[pid]++;
+        }
     }
 
     @Override
-    public void update(Clock clock) {
+    public void update(Clock clock) { // chcek
         if (!(clock instanceof VectorClock)) {
             throw new IllegalArgumentException("Expected VectorClock");
         }
@@ -37,7 +38,9 @@ public class VectorClock extends Clock implements Serializable {
             this.clock[i] = Math.max(this.clock[i], otherVectorClock.clock[i]);
         }
 
-        this.clock[pid - 1]++;
+        synchronized (this.clock){
+            this.clock[pid]++;
+        }
     }
 
     @Override
@@ -55,10 +58,10 @@ public class VectorClock extends Clock implements Serializable {
             if (this.clock[i] > otherVectorClock.clock[i]) greater = true;
         }
 
-        if (less && !greater) return -1;
-        if (greater && !less) return 1;
-        if (!less && !greater) return 0;
-        return 2;
+        if (less && !greater) return -1; // this is lesser
+        if (greater && !less) return 1; // other clock is lesser
+        if (!less && !greater) return 0; // concurrent
+        return 0;
     }
 
     public int[] getClock() {

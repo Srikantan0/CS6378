@@ -20,7 +20,7 @@ public class TCPClient implements Runnable {
     public void run() {
         try {
             sendMessage(from, to, socket);
-            if (from.getNodeId() == 1 && !from.isInSnapshot()) {
+            if (from.getNodeId() == 0 && !from.isInSnapshot()) {
                 from.initSnapshot();
                 System.out.println("Node " + from.getNodeId() + " init a snapshot");
                 for (Node neighbor : from.getNeighbors()) {
