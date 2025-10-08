@@ -20,6 +20,22 @@ public class TCPClient implements Runnable {
     public void run() {
         try {
             sendMessage(from, to, socket);
+            if (from.getNodeId() == 1 && !from.isInSnapshot()) {
+                from.initSnapshot();
+                System.out.println("Node " + from.getNodeId() + " init a snapshot");
+                for (Node neighbor : from.getNeighbors()) {
+                    if (neighbor.getNodeId() != from.getNodeId()) {
+                        TCPClient client = new TCPClient(from, neighbor, null);
+                        new Thread(() -> {
+                            try {
+                                client.sendMarker(from, neighbor, from.getNodeId());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }).start();
+                    }
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -51,31 +67,20 @@ public class TCPClient implements Runnable {
         from.incrementSentMessages();
         from.incrementSentActiveMessages();
     }
-}
 
-/// public void sendMessage(Node from, Node to, Socket socket) throws Exception {
-///         try {
-///             socket = new Socket(to.getHostName(), to.getPort());
-///         } catch (IOException ioe) {
-///             return;
-///         }
-///
-///         from.incrementVectorClock();
-///         OutputStream os = socket.getOutputStream();
-///         InputStream is = socket.getInputStream();
-///         ObjectOutputStream out = new ObjectOutputStream(os);
-///         ObjectInputStream in = new ObjectInputStream(is);
-///
-///         String message = "MSG from Node " +from.getNodeId()+" to " + to.getNodeId() + "| "+ from.getVectorClock();
-///         Message msg = new Message(from.getNodeId(), to.getNodeId(), message);
-///         msg.messageInfo = from.getVectorClock();
-///         out.writeObject(msg);
-///         out.flush();
-///
-///         Object ack = in.readObject();
-///
-///         System.out.println("ACK'd': " + ack.toString());
-///
-///         from.incrementSentMessages();
-///         from.incrementSentActiveMessages();
-///     }
+    public void sendMarker(Node from, Node to, int snapshotId) throws Exception {
+        Socket s = new Socket(to.getHostName(), to.getPort());
+        ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
+        ObjectInputStream in = new ObjectInputStream(s.getInputStream());
+
+        Message markerMsg = new Message(MessageType.MARKER, from.getNodeId());
+        markerMsg.snapshotId = snapshotId;
+        markerMsg.messageInfo = from.getVectorClock();
+
+        out.writeObject(markerMsg);
+        out.flush();
+
+        Object ack = in.readObject();
+        System.out.println("ACK for MARKER from Node " + to.getNodeId() + " : " + ack);
+    }
+}

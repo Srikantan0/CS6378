@@ -1,9 +1,7 @@
 package com.os;
 
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -45,8 +43,43 @@ public class TCPServer implements Runnable {
                                 " : " + msg.messageInfo
                 );
                 if (msg.msgType == MessageType.MARKER) {
-                    System.out.println("MARKER REC'd :: " + node.getNodeId());
-                    // TODO: Add snapshot handling here
+                    System.out.println("MARKER received by Node " + node.getNodeId() + " from Node " + msg.fromNodeId);
+                    Node sender = node.getNeighbors().stream()
+                            .filter(n -> n.getNodeId() == msg.fromNodeId)
+                            .findFirst()
+                            .orElse(null);
+                    if (sender == null) return;
+
+                    int channelIdx = node.getNeighbors().indexOf(sender);
+
+                    if (node.getIncomingChannelStates() == null || node.getIncomingChannelStates().isEmpty()) {
+                        node.initSnapshot();
+                        System.out.println("Node " + node.getNodeId() + " initialized snapshot on first marker");
+                    }
+
+                    if (node.getNodeId() == 0 && !node.isInSnapshot()) {
+                        node.initSnapshot();
+                        System.out.println("Node " + node.getNodeId() + " init a snapshot");
+                        for (Node neighbor : node.getNeighbors()) {
+                            if (neighbor.getNodeId() != sender.getNodeId()) {
+                                TCPClient client = new TCPClient(node, neighbor, null);
+                                new Thread(() -> {
+                                    try {
+                                        client.sendMarker(node, neighbor, msg.snapshotId);
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                }).start();
+                            }
+                        }
+                    } else {
+                        node.recordIncomingMessage(msg.messageInfo.toString(), channelIdx);
+                    }
+                    node.markChannelReceived(channelIdx);
+                    if (node.isSnapshotComplete()) {
+                        System.out.println("Node " + node.getNodeId() + " snapshot over");
+                        node.finishSnapshot();
+                    }
                 }
                 out.writeObject("ACK'd your VC : " + msg.messageInfo);
                 out.flush();
@@ -59,32 +92,3 @@ public class TCPServer implements Runnable {
         }
     }
 }
-
-// is it appln or marker message ?: proceed ; logic
-// marker -> clock will be available -> compare message' clock & node.clock -> update node's clock with other clock if needed
-///     public void startServer(Node node) throws Exception {
-///         ServerSocket serverSocket = new ServerSocket(node.getPort());
-///         System.out.println("node "+ node.getNodeId()+"'s tcp server up on" + node.getPort());
-///
-///         while (true) {
-///             Socket socket = serverSocket.accept();
-///             InputStream in = socket.getInputStream();
-///             OutputStream out = socket.getOutputStream();
-///
-///             byte[] buf = new byte[MAX_MSG_SIZE];
-///             int bytesRead = in.read(buf);
-///
-///             String received = new String(buf, 0, bytesRead);
-///             System.out.println("Msg recd from" + node.getNodeId() + " : " + received);
-///
-///             out.write("ACK".getBytes());
-///             out.flush();
-///
-///             if (node.getState() == NodeState.PASSIVE && node.getSentMessages() < node.getMaxNumber()) {
-///                 node.setState(NodeState.ACTIVE);
-///                 System.out.println("Node " + node.getNodeId() + " became ACTIVE");
-///             }
-///
-///         }
-///     }
-/// }

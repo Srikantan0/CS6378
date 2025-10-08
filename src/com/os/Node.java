@@ -2,6 +2,7 @@ package com.os;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Node implements Serializable {
@@ -16,12 +17,18 @@ public class Node implements Serializable {
     private int maxNumber;
     private VectorClock vectorClock;
 
+    private VectorClock localSnapshot;
+    private List<String> incomingChannelStates = new ArrayList<>();
+    private boolean[] markerReceived;
+    private boolean isInSnapshot = false;
+
     Node(int nodeId, String hostName, int port, int totalNodes){
         this.nodeId = nodeId;
         this.hostName = hostName;
         this.port = port;
         this.neighbors = new ArrayList<>();
         this.vectorClock = new VectorClock(nodeId, totalNodes);
+        this.markerReceived = new boolean[0];
     }
 
     public int getNodeId(){
@@ -112,4 +119,41 @@ public class Node implements Serializable {
         if (vectorClock != null) vectorClock.update(other);
     }
 
+    public void initSnapshot() {
+        isInSnapshot = true;
+        incomingChannelStates = new ArrayList<>();
+        markerReceived = new boolean[neighbors.size()];
+        Arrays.fill(markerReceived, false);
+        localSnapshot = vectorClock;
+    }
+
+    public void recordIncomingMessage(String msg, int channel) {
+        if (!markerReceived[channel]) {
+            incomingChannelStates.add(msg);
+        }
+    }
+
+    public void markChannelReceived(int channel) {
+        markerReceived[channel] = true;
+    }
+
+    public boolean isSnapshotComplete() {
+        for (boolean b : markerReceived) if (!b) return false;
+        return true;
+    }
+
+    public VectorClock getLocalSnapshot() {
+        return localSnapshot;
+    }
+
+    public List<String> getIncomingChannelStates() {
+        return incomingChannelStates;
+    }
+
+    public boolean isInSnapshot() {
+        return isInSnapshot;
+    }
+    public void finishSnapshot() {
+        isInSnapshot = false;
+    }
 }
