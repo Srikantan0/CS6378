@@ -83,9 +83,12 @@ public class TCPServer implements Runnable {
                 }
                 out.writeObject("ACK'd your VC : " + msg.messageInfo);
                 out.flush();
-            if (node.getState() == NodeState.PASSIVE && node.getSentMessages() < node.getMaxNumber()) {
+                if (node.getState() == NodeState.PASSIVE && node.getSentMessages() < node.getMaxNumber()) {
                     node.setState(NodeState.ACTIVE);
                     System.out.println("Node " + node.getNodeId() + " became ACTIVE");
+                }
+                if (msg.msgType == MessageType.APP) {
+                    node.updateClock((VectorClock) msg.messageInfo);
                 }
             }
 
