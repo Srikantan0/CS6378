@@ -4,16 +4,18 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.List;
 
 // listen on port of curr node for any incoming msg from any neighbor node
 // ack that you've recd a message
 public class TCPServer implements Runnable {
-    private static final int MAX_MSG_SIZE = 4096;
 
     private final Node node;
+    private final ChandyLamport chandyLamport;
 
-    public TCPServer(Node node) {
+    public TCPServer(Node node, ChandyLamport chandyLamport) {
         this.node = node;
+        this.chandyLamport = chandyLamport;
     }
 
     @Override
@@ -57,33 +59,34 @@ public class TCPServer implements Runnable {
                     }
 
                     if (!node.isInSnapshot()) {
-                        node.initSnapshot(msg.snapshotId);
-                        System.out.println("Node " + node.getNodeId() + " init a snapshot");
-                        for (Node neighbor : node.getNeighbors()) {
-                            if (neighbor.getNodeId() != sender.getNodeId()) {
-                                TCPClient client = new TCPClient(node, neighbor, null);
-                                new Thread(() -> {
-                                    try {
-                                        client.sendMarker(node, neighbor, msg.snapshotId);
-                                    } catch (Exception e) {
-                                    }
-                                }).start();
-                            }
-                        }
+                        initiateMarkerMessages(node, msg, sender);
                     } else {
-                        System.out.println("Recorded in-transit message on channel " + msg.fromNodeId + "->" + node.getNodeId());
-                        node.recordIncomingMessage(msg.messageInfo.toString(), channelIdx);
+                        System.out.println("rec'd channel state: " + msg.fromNodeId + "->" + node.getNodeId());
+                        VectorClock tempClock = (VectorClock) msg.messageInfo;
+                        node.recordIncomingMessage(tempClock, channelIdx);
                     }
                     node.markChannelReceived(channelIdx);
                     if (node.isSnapshotComplete()) {
                         System.out.println("Node " + node.getNodeId() + " snapshot completed");
-                        System.out.println("local state: " + node.getLocalSnapshot());
-                        System.out.println("channel states:");
-                        for (String s : node.getIncomingChannelStates()) {
-                            System.out.println("  " + s);
+                        Snapshot snapshot = new Snapshot(
+                                node.getNodeId(),
+                                node.getCurrentSnapshotId(),
+                                node.getLocalSnapshot(),
+                                node.getIncomingChannelStates(),
+                                node.getState()
+                        );
+                        if (node.getNodeId() != 0) {
+                            sendMarkerToInitiator(node, snapshot);
+                        } else {
+                            chandyLamport.updateGlobalSnapshot(snapshot);
                         }
+                        System.out.println("Local state: " + snapshot.localVectorClock);
+                        System.out.println("Channel states " + snapshot.incomingChanelStates);
                         node.finishSnapshot();
                     }
+                }
+                else if (msg.msgType == MessageType.STATE) {
+                    handleStateMessages(node, msg);
                 }
                 out.writeObject("ACK'd your VC : " + msg.messageInfo);
                 out.flush();
@@ -94,8 +97,66 @@ public class TCPServer implements Runnable {
                 if (msg.msgType == MessageType.APP) {
                     node.updateClock((VectorClock) msg.messageInfo);
                 }
+                if (msg.msgType == MessageType.APP && node.isInSnapshot()) {
+                    recordingChannelStates(node, msg);
+                }
             }
 
+        }
+    }
+
+    private static void initiateMarkerMessages(Node node, Message msg, Node sender) {
+        node.initSnapshot(msg.snapshotId);
+        System.out.println("Node " + node.getNodeId() + " init a snapshot");
+        for (Node neighbor : node.getNeighbors()) {
+            if (neighbor.getNodeId() != sender.getNodeId()) {
+                TCPClient client = new TCPClient(node, neighbor);
+                new Thread(() -> {
+                    try {
+                        client.sendMarker(node, neighbor, msg.snapshotId);
+                    } catch (Exception e) {
+                    }
+                }).start();
+            }
+        }
+    }
+
+    private static void recordingChannelStates(Node node, Message msg) {
+        int channelIdx = -1;
+        List<Node> neighbors = node.getNeighbors();
+        for (int i = 0; i < neighbors.size(); i++) {
+            if (neighbors.get(i).getNodeId() == msg.fromNodeId) {
+                channelIdx = i;
+                break;
+            }
+        }
+        if (channelIdx != -1) {
+            node.recordIncomingMessage((VectorClock) msg.messageInfo, channelIdx);
+            System.out.println("channelState :" + msg.fromNodeId + "->" + node.getNodeId());
+        } else {
+            System.out.println("WRONG CHANNEL MESSAGE, ignorning");
+        }
+    }
+
+    private void handleStateMessages(Node node, Message msg) {
+        if (node.getNodeId() == 0) {
+            Snapshot snapshot = (Snapshot) msg.messageInfo;
+            System.out.println("Initiator node got the snapshot from " + snapshot.nodeId);
+            chandyLamport.updateGlobalSnapshot(snapshot);
+        } else {
+            System.out.println("no init node got a global snapshot");
+        }
+    }
+
+    private void sendMarkerToInitiator(Node node, Snapshot snapshot) {
+        Node initiatorNode = chandyLamport.getInitatorNodeId();
+        if (initiatorNode != null) {
+            new Thread(() -> {
+                try {
+                    TCPClient client = new TCPClient(node, initiatorNode);
+                    client.sendState(node, initiatorNode, snapshot);
+                } catch (Exception e) { }
+            }).start();
         }
     }
 }

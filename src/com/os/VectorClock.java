@@ -35,11 +35,9 @@ public class VectorClock extends Clock implements Serializable {
         VectorClock otherVectorClock = (VectorClock) clock;
 
         for (int i = 0; i < this.clock.length; i++) {
-            this.clock[i] = Math.max(this.clock[i], otherVectorClock.clock[i]);
-        }
-
-        synchronized (this.clock){
-            this.clock[pid]++;
+            synchronized (this.clock){
+                this.clock[i] = Math.max(this.clock[i], otherVectorClock.clock[i]);
+            }
         }
     }
 

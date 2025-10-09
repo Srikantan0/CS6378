@@ -1,5 +1,6 @@
 package com.os;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -8,11 +9,13 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
     private final Node node;
     private final int snapshotDelay;
     private int snapshotId = 0;
+    private final List<Node> nodesInNetwork;
 
     private final Map<Integer, Object> globalSnapshot = new ConcurrentHashMap<>();
-    public ChandyLamport(Node node, int snapshotDelay) {
+    public ChandyLamport(Node node, int snapshotDelay, List<Node> nodes) {
         this.node = node;
         this.snapshotDelay = snapshotDelay;
+        this.nodesInNetwork = nodes;
     }
 
     @Override
@@ -41,7 +44,7 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
         node.initSnapshot(currentSnapshotId);
         for (Node neighbor : node.getNeighbors()) {
             if (neighbor.getNodeId() != node.getNodeId()) {
-                TCPClient client = new TCPClient(node, neighbor, null);
+                TCPClient client = new TCPClient(node, neighbor);
                 new Thread(() -> {
                     try {
                         client.sendMarker(node, neighbor, currentSnapshotId);
@@ -51,32 +54,57 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
         }
     }
 
-    @Override
-    public boolean isConsistentGlobalState(Map<Integer, Object> snapshot) {
-        // TODO: Implement the Vector Clock consistency check here
-        return false;
+    public synchronized void updateGlobalSnapshot(Snapshot snapshot) {
+        globalSnapshot.put(snapshot.nodeId, snapshot);
+        if (globalSnapshot.size() == nodesInNetwork.size()) {
+            System.out.println("global snapshot: " + snapshot.snapshotId + " over");
+
+            if (isConsistentGlobalState(globalSnapshot)) {
+                System.out.println("snapsshot " + snapshot.snapshotId + " consistent");
+            } else {
+                System.out.println("snapshot " + snapshot.snapshotId + " inconsistent");
+            }
+            globalSnapshot.clear();
+        }
     }
 
     @Override
+    public boolean isConsistentGlobalState(Map<Integer, Object> snapshot) {
+        for (Object dataObj : snapshot.values()) {
+            Snapshot recdData = (Snapshot) dataObj;
+            VectorClock vc = recdData.localVectorClock;
+            for (VectorClock sentVc : recdData.incomingChanelStates) {
+                int senderId = sentVc.pid;
+                int sendVC = sentVc.getClock()[senderId];
+                int recdC = vc.getClock()[senderId];
+                if (sendVC <= recdC) return false;
+            }
+        }
+        return true;
+    }
+
+    public Node getInitatorNodeId() {
+        return nodesInNetwork.stream()
+                .filter(n -> n.getNodeId() == 0)
+                .findFirst().orElse(null);
+    }
+
+
+    @Override
     public boolean areAllNodesPassive() {
-        // TODO: Implement logic to check if all nodes are Passive in the collected snapshot
         return false;
     }
 
     @Override
     public boolean areAllChannelsEmpty() {
-        // TODO: Implement logic to check if all channels are empty in the collected snapshot
         return false;
     }
 
     @Override
     public boolean canTerminate() {
-        // TODO: Combine the checks for global termination
         return false;
     }
 
     @Override
-    public void terminate() {
-        // TODO: Implement the graceful shutdown logic
-    }
+    public void terminate() { }
 }
