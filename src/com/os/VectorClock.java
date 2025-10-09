@@ -54,8 +54,7 @@ public class VectorClock extends Clock implements Serializable {
 
         if (less && !greater) return -1; // this is lesser
         if (greater && !less) return 1; // other clock is lesser
-        if (!less && !greater) return 0; // concurrent
-        return 0;
+        return 0; // concurrent
     }
 
     public int[] getClock() {
