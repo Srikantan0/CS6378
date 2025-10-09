@@ -53,12 +53,11 @@ public class TCPServer implements Runnable {
                     int channelIdx = node.getNeighbors().indexOf(sender);
 
                     if (node.getIncomingChannelStates() == null || node.getIncomingChannelStates().isEmpty()) {
-                        node.initSnapshot();
                         System.out.println("Node " + node.getNodeId() + " initialized snapshot on first marker");
                     }
 
                     if (!node.isInSnapshot()) {
-                        node.initSnapshot();
+                        node.initSnapshot(msg.snapshotId);
                         System.out.println("Node " + node.getNodeId() + " init a snapshot");
                         for (Node neighbor : node.getNeighbors()) {
                             if (neighbor.getNodeId() != sender.getNodeId()) {
@@ -67,17 +66,22 @@ public class TCPServer implements Runnable {
                                     try {
                                         client.sendMarker(node, neighbor, msg.snapshotId);
                                     } catch (Exception e) {
-                                        e.printStackTrace();
                                     }
                                 }).start();
                             }
                         }
                     } else {
+                        System.out.println("Recorded in-transit message on channel " + msg.fromNodeId + "->" + node.getNodeId());
                         node.recordIncomingMessage(msg.messageInfo.toString(), channelIdx);
                     }
                     node.markChannelReceived(channelIdx);
                     if (node.isSnapshotComplete()) {
-                        System.out.println("Node " + node.getNodeId() + " snapshot over");
+                        System.out.println("Node " + node.getNodeId() + " snapshot completed");
+                        System.out.println("local state: " + node.getLocalSnapshot());
+                        System.out.println("channel states:");
+                        for (String s : node.getIncomingChannelStates()) {
+                            System.out.println("  " + s);
+                        }
                         node.finishSnapshot();
                     }
                 }

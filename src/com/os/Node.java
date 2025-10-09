@@ -21,6 +21,7 @@ public class Node implements Serializable {
     private List<String> incomingChannelStates = new ArrayList<>();
     private boolean[] markerReceived;
     private boolean isInSnapshot = false;
+    private int currentSnapshotId = -1;
 
     Node(int nodeId, String hostName, int port, int totalNodes){
         this.nodeId = nodeId;
@@ -119,8 +120,9 @@ public class Node implements Serializable {
         if (vectorClock != null) vectorClock.update(other);
     }
 
-    public void initSnapshot() {
+    public void initSnapshot(int snapshotId) {
         isInSnapshot = true;
+        this.currentSnapshotId = snapshotId;
         incomingChannelStates = new ArrayList<>();
         markerReceived = new boolean[neighbors.size()];
         Arrays.fill(markerReceived, false);
