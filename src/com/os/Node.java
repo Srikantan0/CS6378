@@ -18,12 +18,12 @@ public class Node implements Serializable {
     private VectorClock vectorClock;
 
     private VectorClock localSnapshot;
-    private List<VectorClock> incomingChannelStates = new ArrayList<>();
+    private List<String> incomingChannelStates = new ArrayList<>();
     private boolean[] markerReceived;
     private boolean isInSnapshot = false;
     private int currentSnapshotId = -1;
 
-    Node(int nodeId, String hostName, int port, int totalNodes) {
+    Node(int nodeId, String hostName, int port, int totalNodes){
         this.nodeId = nodeId;
         this.hostName = hostName;
         this.port = port;
@@ -32,15 +32,15 @@ public class Node implements Serializable {
         this.markerReceived = new boolean[0];
     }
 
-    public int getNodeId() {
+    public int getNodeId(){
         return this.nodeId;
     }
 
-    public String getHostName() {
+    public String getHostName(){
         return this.hostName;
     }
 
-    public int getPort() {
+    public int getPort(){
         return this.port;
     }
 
@@ -69,50 +69,49 @@ public class Node implements Serializable {
         this.state = state;
     }
 
-    public int getMaxNumber() {
+    public int getMaxNumber(){
         return this.maxNumber;
     }
 
-    public void setMaxNumber(int maxNumber) {
-        this.maxNumber = maxNumber;
-    }
-
-    public int getSentMessages() {
+    public int getSentMessages(){
         return this.sentMessages;
     }
 
-    public List<Node> getNeighbors() {
+    public List<Node> getNeighbors(){
         return this.neighbors;
     }
 
-    public void incrementSentMessages() {
+    public void incrementSentMessages(){
         this.sentMessages += 1;
     }
 
-    public int getSentActiveMessages() {
+    public int getSentActiveMessages(){
         return this.sentActiveMessages;
     }
 
-    public void incrementSentActiveMessages() {
+    public void incrementSentActiveMessages(){
         this.sentActiveMessages += 1;
     }
 
-    public void resetSentActiveMessages() {
+    public void resetSentActiveMessages(){
         this.sentActiveMessages = 0;
+    }
+
+    public void setMaxNumber(int maxNumber){
+        this.maxNumber = maxNumber;
     }
 
     public void initClock(int totalNodes) {
         this.vectorClock = new VectorClock(this.nodeId, totalNodes);
     }
 
-    public void incrementVectorClock() {
+    public void incrementVectorClock(){
         this.vectorClock.increment();
     }
 
     public VectorClock getVectorClock() {
         return this.vectorClock;
     }
-
     public void setVectorClock(VectorClock vectorClock) {
         this.vectorClock = vectorClock;
     }
@@ -130,7 +129,7 @@ public class Node implements Serializable {
         localSnapshot = vectorClock;
     }
 
-    public void recordIncomingMessage(VectorClock msg, int channel) {
+    public void recordIncomingMessage(String msg, int channel) {
         if (!markerReceived[channel]) {
             incomingChannelStates.add(msg);
         }
@@ -149,19 +148,14 @@ public class Node implements Serializable {
         return localSnapshot;
     }
 
-    public List<VectorClock> getIncomingChannelStates() {
+    public List<String> getIncomingChannelStates() {
         return incomingChannelStates;
     }
 
     public boolean isInSnapshot() {
         return isInSnapshot;
     }
-
     public void finishSnapshot() {
         isInSnapshot = false;
-    }
-
-    public int getCurrentSnapshotId() {
-        return currentSnapshotId;
     }
 }

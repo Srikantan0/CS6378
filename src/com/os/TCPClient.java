@@ -4,26 +4,28 @@ import java.io.*;
 import java.net.Socket;
 
 public class TCPClient implements Runnable {
+    private static final int MAX_MSG_SIZE = 4096;
 
     private final Node from;
     private final Node to;
+    private final Socket socket;
 
-    public TCPClient(Node from, Node to) {
+    public TCPClient(Node from, Node to, Socket socket) {
         this.from = from;
         this.to = to;
+        this.socket = socket;
     }
 
     @Override
     public void run() {
         try {
-            sendMessage(from, to);
+            sendMessage(from, to, socket);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void sendMessage(Node from, Node to) throws Exception {
-        Socket socket = null;
+    public void sendMessage(Node from, Node to, Socket socket) throws Exception {
         try {
             socket = new Socket(to.getHostName(), to.getPort());
         } catch (IOException ioe) {
@@ -65,33 +67,4 @@ public class TCPClient implements Runnable {
         Object ack = in.readObject();
         System.out.println("ACK for MARKER from Node " + to.getNodeId() + " : " + ack);
     }
-
-    public void sendState(Node from, Node to, Snapshot localSnapshot) throws Exception {
-        Socket s = null;
-        try {
-            s = new Socket(to.getHostName(), to.getPort());
-        } catch (IOException ioe) { }
-
-        ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
-        ObjectInputStream in = new ObjectInputStream(s.getInputStream());
-
-        Message stateMsg = constrcutLocalStateMessage(from, localSnapshot);
-        System.out.println("Node " + from.getNodeId() + "snapshot DONE -> reporting to 0");
-        out.writeObject(stateMsg);
-        out.flush();
-
-        Object ack = in.readObject();
-        System.out.println("SNAPSHOT REPORT ACK from " + to.getNodeId() + " : " + ack);
-        in.close();
-        out.close();
-        s.close();
-    }
-
-    private static Message constrcutLocalStateMessage(Node from, Snapshot localSnapshot) {
-        Message stateMsg = new Message(MessageType.STATE, from.getNodeId());
-        stateMsg.snapshotId = localSnapshot.snapshotId;
-        stateMsg.messageInfo = localSnapshot;
-        return stateMsg;
-    }
-
 }

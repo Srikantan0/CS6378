@@ -23,23 +23,17 @@ public class Main {
         int maxPerActive = parser.getMaxPerActive();
         int minSendDelay = parser.getMinSendDelay();
 
-        Producer producer = new Producer(
-                currNode,
-                minPerActive,
-                maxPerActive,
-                minSendDelay
-        );
-        ChandyLamport snapshotProc = new ChandyLamport(
-                currNode,
-                parser.getSnapshotDelay(),
-                parser.getAllNodesConfigs()
-        );
-        Thread snapshotThread = new Thread(snapshotProc);
-        Consumer consumer = new Consumer(currNode, snapshotProc);
+        Producer producer = new Producer(currNode, minPerActive, maxPerActive,minSendDelay);
+        Consumer consumer = new Consumer(currNode);
 
         ProducerConsumer pc = new ProducerConsumer(producer, consumer);
         pc.start();
+        SnapshotProtocol snapshotProc = new ChandyLamport(currNode, parser.getSnapshotDelay());
+        Thread snapshotThread = new Thread((Runnable) snapshotProc);
         snapshotThread.start();
+        // snapshotProc = new ChandyLamport()
+        // snapshotProc.start()
         Runtime.getRuntime().addShutdownHook(new Thread(pc::close));
+        //Runtime.getRuntime().addShutdownHook(new Thread(snapshotProc::close));
     }
 }

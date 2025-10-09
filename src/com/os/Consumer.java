@@ -2,16 +2,14 @@ package com.os;
 
 public class Consumer implements Runnable {
     Node currentNode;
-    ChandyLamport chandyLamport;
 
-    Consumer(Node node, ChandyLamport chandyLamport) {
+    Consumer(Node node) {
         this.currentNode = node;
-        this.chandyLamport = chandyLamport;
     }
 
     @Override
     public void run() {
-        TCPServer server = new TCPServer(currentNode, chandyLamport);
+        TCPServer server = new TCPServer(currentNode);
         Thread serverThread = new Thread(server);
         serverThread.start();
 

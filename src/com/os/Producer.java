@@ -35,7 +35,7 @@ public class Producer implements Runnable{
             }
 
             Node neighbor = neighbors.get(random.nextInt(neighbors.size()));
-            TCPClient client = new TCPClient(currentNode, neighbor);
+            TCPClient client = new TCPClient(currentNode, neighbor, null);
             Thread clientThread = new Thread(client);
             clientThread.start();
 
