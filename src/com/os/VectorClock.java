@@ -7,6 +7,10 @@ public class VectorClock extends Clock implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final int[] clock;  // vector to store timestamps
+    public VectorClock() {
+        super();
+        this.clock = new int[0];
+    }
 
     public VectorClock(int pid, int numProcesses) {
         super(pid);
