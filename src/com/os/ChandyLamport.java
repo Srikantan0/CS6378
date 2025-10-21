@@ -54,10 +54,6 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
 
     @Override
     public void takeSnapshot(int currentSnapshotId) {
-//        if (node.getNodeId() != 0) {
-//            node.initSnapshot(snapshotId);
-//            return;
-//        }
         node.initSnapshot(snapshotId);
         Snapshot localSnapshot = new Snapshot(
                 node.getNodeId(),
@@ -70,11 +66,10 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
         );
         this.addSnapshot(node.getNodeId(), localSnapshot);
         System.out.println("Node "+node.getNodeId()+" recorded its own local snapshot in the global map.");
-        this.forwardMarkerToConnected(snapshotId);
+        this.forwardTerminationToAll(snapshotId);
     }
 
-    private void forwardMarkerToConnected(int currentSnapshotId) {
-        System.out.println("sending consistent snapshot"+currentSnapshotId+" for termination.");
+    private void forwardTerminationToAll(int currentSnapshotId) {
         for (Node neighbor : node.getNeighbors()) {
             System.out.println("sending terminate signal to all");
             if (neighbor.getNodeId() != node.getNodeId()) {
@@ -186,10 +181,9 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
             Thread.currentThread().interrupt();
         }
         System.out.println("gracefully shutting down node");
-//        Snapshot glSnap = (Snapshot) globalSnapshot.get(node.getNodeId());
-//        if(glSnap != null){
-        node.addCompletedSnapshot(node.getLocalSnapshot());
-//        }
+        VectorClock locSnap = node.getLocalSnapshot();
+        if(locSnap == null) locSnap = node.getVectorClock();
+        node.addCompletedSnapshot(locSnap);
         node.shutdownGracefully();
         System.exit(0);
     }
