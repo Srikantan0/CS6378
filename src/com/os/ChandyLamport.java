@@ -54,10 +54,10 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
 
     @Override
     public void takeSnapshot(int currentSnapshotId) {
-        if (node.getNodeId() != 0) {
-            node.initSnapshot(snapshotId);
-            return;
-        }
+//        if (node.getNodeId() != 0) {
+//            node.initSnapshot(snapshotId);
+//            return;
+//        }
         node.initSnapshot(snapshotId);
         Snapshot localSnapshot = new Snapshot(
                 node.getNodeId(),
@@ -68,12 +68,13 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
                 node.getMaxNumber(),
                 node.getSentActiveMessages()
         );
-        this.addSnapshot(0, localSnapshot);
-        System.out.println("Node 0 recorded its own local snapshot in the global map.");
+        this.addSnapshot(node.getNodeId(), localSnapshot);
+        System.out.println("Node "+node.getNodeId()+" recorded its own local snapshot in the global map.");
         this.forwardMarkerToConnected(snapshotId);
     }
 
     private void forwardMarkerToConnected(int currentSnapshotId) {
+        System.out.println("sending consistent snapshot"+currentSnapshotId+" for termination.");
         for (Node neighbor : node.getNeighbors()) {
             System.out.println("sending terminate signal to all");
             if (neighbor.getNodeId() != node.getNodeId()) {
@@ -96,19 +97,18 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
             int j = receiverSnapshot.nodeId;
             if (receiverSnapshot.incomingChanelStates == null) continue;
             for (VectorClock messageVC : receiverSnapshot.incomingChanelStates) {
-                for (Object senderObj : snapshot.values()) {
-                    Snapshot senderSnapshot = (Snapshot) senderObj;
-                    int i = senderSnapshot.nodeId;
-                    if (i == j) continue;
+                int i = messageVC.pid;
+                Snapshot senderSnapshot = (Snapshot) snapshot.get(i);
+                if (senderSnapshot == null) continue;
 
-                    int v_m_i = messageVC.getClock()[i];
-                    int v_i_s_i = senderSnapshot.localVectorClock.getClock()[i];
-                    int v_m_j = messageVC.getClock()[j];
-                    int v_j_s_j = receiverSnapshot.localVectorClock.getClock()[j];
-                    if (v_m_i <= v_i_s_i && v_m_j <= v_j_s_j) {
-                        System.out.println("inconsistent clocks found..");
-                        return false;
-                    }
+                int v_m_i = messageVC.getClock()[i];
+                int v_i_s_i = senderSnapshot.localVectorClock.getClock()[i];
+
+                if (v_m_i <= v_i_s_i) {
+                    System.out.println("inconsistent clocks found: Message from Node " + i + " to Node " + j +
+                            " violates consistency (C(m)_i=" + v_m_i + " <= V_i(S_i)_i=" + v_i_s_i + ")");
+                    System.out.println("inconsistent");
+                    return false;
                 }
             }
         }
@@ -181,11 +181,16 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
             }
         }
         try {
-            Thread.sleep(100);
+            Thread.sleep(2000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
         System.out.println("gracefully shutting down node");
+//        Snapshot glSnap = (Snapshot) globalSnapshot.get(node.getNodeId());
+//        if(glSnap != null){
+        node.addCompletedSnapshot(node.getLocalSnapshot());
+//        }
+        node.shutdownGracefully();
         System.exit(0);
     }
 }

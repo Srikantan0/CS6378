@@ -45,7 +45,7 @@ public class TCPServer implements Runnable {
                                 " : " + msg.messageInfo
                 );
                 if (msg.msgType == MessageType.STATE) {
-                    System.out.println("Node " + node.getNodeId() + " received STATE message from Node " + msg.fromNodeId);
+                    System.out.println("Node " + node.getNodeId() + " received state messages from Node " + msg.fromNodeId);
                     if (node.getNodeId() == 0 && msg.messageInfo instanceof Snapshot) {
                         ChandyLamport cl = (ChandyLamport) node.getSnapshotProtocol();
                         cl.addSnapshot(msg.fromNodeId, (Snapshot) msg.messageInfo);
@@ -127,24 +127,6 @@ public class TCPServer implements Runnable {
                 }
                 if (msg.msgType == MessageType.APP) {
                     node.updateClock((VectorClock) msg.messageInfo);
-                }
-                if (msg.msgType == MessageType.TERMINATE) {
-                    System.out.println("terminating node" + node.getNodeId()+"...");
-                    if (!node.isHalting()) {
-                        node.setHalting(true);
-                        for (Node neighbor : node.getNeighbors()) {
-                            if (neighbor.getNodeId() != node.getNodeId()) {
-                                TCPClient client = new TCPClient(node, neighbor, null);
-                                new Thread(() -> {
-                                    try {
-                                        client.sendTerminate();
-                                    } catch (Exception e) {}
-                                }).start();
-                            }
-                        }
-                        node.shutdownGracefully();
-                    }
-                    return;
                 }
             }
 

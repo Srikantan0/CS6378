@@ -12,7 +12,7 @@ public class Node implements Serializable {
     private final String hostName;
     private final int port;
 
-    private List<Node> neighbors;
+    private final List<Node> neighbors;
     private NodeState state = NodeState.ACTIVE;
     private int sentMessages = 0;
     private int sentActiveMessages = 0;
@@ -27,7 +27,7 @@ public class Node implements Serializable {
     private final int totalNodes;
     private SnapshotProtocol snapshotProtocol;
     private volatile boolean isHalting = false;
-    private List<VectorClock> collectedSnaps;
+    private final List<VectorClock> collectedSnaps =  new ArrayList<>();
 
     public boolean isHalting() {
         return isHalting;
@@ -196,18 +196,27 @@ public class Node implements Serializable {
     }
 
     public void addCompletedSnapshot(VectorClock vc) {
+        try{
+            if(vc == null) System.out.println("siohdf");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        System.out.println("adding snapshot.." + vc.pid + "  " + vc.getClockString());
         this.collectedSnaps.add(new VectorClock(vc.pid, vc.getClockValues()));
         System.out.println("Node " + nodeId + " recorded a snapshot: " + vc.getClockString());
     }
     private void writeSnapshotOutput(String configFileName) {
         String outputFileName = configFileName.replace(".txt", "") + "-" + nodeId + ".txt";
+        System.out.println("beginning to write output to file");
+        System.out.flush();
+        System.out.println("collected: "+collectedSnaps);
         try (PrintWriter writer = new PrintWriter(outputFileName)) {
             for (VectorClock vc : collectedSnaps) {
                 writer.println(vc.getClockString());
             }
-            System.out.println("\n*** Output written to: " + outputFileName + " ***");
+            System.out.println("output file generated");
         } catch (FileNotFoundException e) {
-            System.err.println("Error writing output file: " + e.getMessage());
+            System.out.println(e);
         }
     }
 
