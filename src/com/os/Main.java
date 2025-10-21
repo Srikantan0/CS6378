@@ -26,6 +26,7 @@ public class Main {
 
         Producer producer = new Producer(currNode, minPerActive, maxPerActive,minSendDelay);
         Consumer consumer = new Consumer(currNode);
+        System.setProperty("configFileName", "config.txt");
 
         ProducerConsumer pc = new ProducerConsumer(producer, consumer);
         pc.start();

@@ -100,7 +100,9 @@ public class TCPServer implements Runnable {
                                 node.getCurrentSnapshotId(),
                                 node.getLocalSnapshot(),
                                 node.getIncomingChannelStates(),
-                                node.getState()
+                                node.getState(),
+                                node.getMaxNumber(),
+                                node.getSentActiveMessages()
                         );
 
                         Node initiator = node.getNeighborById(0);
@@ -127,9 +129,9 @@ public class TCPServer implements Runnable {
                     node.updateClock((VectorClock) msg.messageInfo);
                 }
                 if (msg.msgType == MessageType.TERMINATE) {
+                    System.out.println("terminating node" + node.getNodeId()+"...");
                     if (!node.isHalting()) {
                         node.setHalting(true);
-                        System.out.println("Node " + node.getNodeId() + " received TERMINATE signal. Propagating and exiting.");
                         for (Node neighbor : node.getNeighbors()) {
                             if (neighbor.getNodeId() != node.getNodeId()) {
                                 TCPClient client = new TCPClient(node, neighbor, null);

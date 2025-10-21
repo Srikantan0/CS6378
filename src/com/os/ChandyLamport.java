@@ -1,6 +1,5 @@
 package com.os;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,17 +32,18 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
         try {
             Thread.sleep(5000);
             while (true) {
-                if (!globalSnapshot.isEmpty() && globalSnapshot.size() == node.getTotalNodes()) {
+                if (!globalSnapshot.isEmpty()) {
                     if (canTerminate()) {
+                        System.out.println("Terminating--");
                         terminate();
                         return;
                     }
                     globalSnapshot.clear();
                 }
                 if (node.getState() == NodeState.PASSIVE && !node.isInSnapshot()) {
-                    System.out.println("Node 0 is passive. Initiating GNTD snapshot " + snapshotId);
-                    takeSnapshot(snapshotId);
-                    snapshotId++;
+                    System.out.println("Node 0 is passive => snapshot " + snapshotId);
+                    takeSnapshot(++snapshotId);
+
                 }
                 Thread.sleep(snapshotDelay);
             }
@@ -64,7 +64,9 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
                 node.getCurrentSnapshotId(),
                 node.getLocalSnapshot(),
                 node.getIncomingChannelStates(),
-                node.getState()
+                node.getState(),
+                node.getMaxNumber(),
+                node.getSentActiveMessages()
         );
         this.addSnapshot(0, localSnapshot);
         System.out.println("Node 0 recorded its own local snapshot in the global map.");
@@ -73,20 +75,22 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
 
     private void forwardMarkerToConnected(int currentSnapshotId) {
         for (Node neighbor : node.getNeighbors()) {
+            System.out.println("sending terminate signal to all");
             if (neighbor.getNodeId() != node.getNodeId()) {
                 TCPClient client = new TCPClient(node, neighbor, null);
                 new Thread(() -> {
                     try {
-                        client.sendMarker(node, neighbor, currentSnapshotId);
+                        client.sendTerminate();
                     } catch (Exception e) { }
                 }).start();
             }
+            System.out.println("done with termination signals");
         }
     }
 
     @Override
     public boolean isConsistentGlobalState(Map<Integer, Object> snapshot) {
-        System.out.println("Checking for global state consistency using Vector Clocks...");
+        System.out.println("consistency check for clocks");
         for (Object receiverObj : snapshot.values()) {
             Snapshot receiverSnapshot = (Snapshot) receiverObj;
             int j = receiverSnapshot.nodeId;
@@ -102,14 +106,13 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
                     int v_m_j = messageVC.getClock()[j];
                     int v_j_s_j = receiverSnapshot.localVectorClock.getClock()[j];
                     if (v_m_i <= v_i_s_i && v_m_j <= v_j_s_j) {
-                        System.err.println("Consistency FAILED: Message (VC: " + messageVC + ") collected at Node " + j +
-                                " was received *before* j's snapshot and sent *before* i's snapshot. It should not be in the in-transit channel.");
+                        System.out.println("inconsistent clocks found..");
                         return false;
                     }
                 }
             }
         }
-        System.out.println("Global state is consistent.");
+        System.out.println("consistent");
         return true;
     }
 
@@ -119,7 +122,7 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
             if (obj instanceof Snapshot) {
                 Snapshot snap = (Snapshot) obj;
                 if (snap.finalState != NodeState.PASSIVE) {
-                    System.out.println("Node " + snap.nodeId + " is not passive (State: " + snap.finalState + ")");
+                    System.out.println("node " + snap.nodeId + " " + snap.finalState);
                     return false;
                 }
             }
@@ -133,7 +136,7 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
             if (obj instanceof Snapshot) {
                 Snapshot snap = (Snapshot) obj;
                 if (!snap.incomingChanelStates.isEmpty()) {
-                    System.out.println("Node " + snap.nodeId + " recorded " + snap.incomingChanelStates.size() + " in-transit messages.");
+                    System.out.println("recorded intransit message");
                     return false;
                 }
             }
@@ -144,21 +147,21 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
     @Override
     public boolean canTerminate() {
         if (!isConsistentGlobalState(globalSnapshot)) {
-            System.out.println("Termination check failed: Global state is inconsistent.");
+            System.out.println("not consistent");
             return false;
         }
 
         if (!areAllNodesPassive()) {
-            System.out.println("Termination check failed: Not all nodes are passive.");
+            System.out.println("some nodes are still active");
             return false;
         }
 
         if (!areAllChannelsEmpty()) {
-            System.out.println("Termination check failed: Channels are not empty.");
+            System.out.println("intransit messages lost");
             return false;
         }
 
-        System.out.println("\n*** GLOBAL TERMINATION CONDITION MET ***");
+        System.out.println("terminating...");
         return true;
     }
 
@@ -182,7 +185,7 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-        System.out.println("Global termination signal sent. Shutting down Node " + node.getNodeId());
+        System.out.println("gracefully shutting down node");
         System.exit(0);
     }
 }

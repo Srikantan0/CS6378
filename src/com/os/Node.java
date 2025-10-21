@@ -1,5 +1,7 @@
 package com.os;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,6 +27,7 @@ public class Node implements Serializable {
     private final int totalNodes;
     private SnapshotProtocol snapshotProtocol;
     private volatile boolean isHalting = false;
+    private List<VectorClock> collectedSnaps;
 
     public boolean isHalting() {
         return isHalting;
@@ -192,8 +195,29 @@ public class Node implements Serializable {
         return this.snapshotProtocol;
     }
 
+    public void addCompletedSnapshot(VectorClock vc) {
+        this.collectedSnaps.add(new VectorClock(vc.pid, vc.getClockValues()));
+        System.out.println("Node " + nodeId + " recorded a snapshot: " + vc.getClockString());
+    }
+    private void writeSnapshotOutput(String configFileName) {
+        String outputFileName = configFileName.replace(".txt", "") + "-" + nodeId + ".txt";
+        try (PrintWriter writer = new PrintWriter(outputFileName)) {
+            for (VectorClock vc : collectedSnaps) {
+                writer.println(vc.getClockString());
+            }
+            System.out.println("\n*** Output written to: " + outputFileName + " ***");
+        } catch (FileNotFoundException e) {
+            System.err.println("Error writing output file: " + e.getMessage());
+        }
+    }
+
     public void shutdownGracefully() {
-        System.out.println("Node " + nodeId + " is shutting down...");
+        String configFileName = System.getProperty("configFileName");
+        if (configFileName == null) {
+            configFileName = "config.txt";
+        }
+        writeSnapshotOutput(configFileName);
+        System.out.println("Node " + nodeId + " shutting down gracefully.");
         System.exit(0);
     }
 }

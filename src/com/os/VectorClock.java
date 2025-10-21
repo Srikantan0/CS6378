@@ -77,4 +77,24 @@ public class VectorClock extends Clock implements Serializable {
     public String toString() {
         return Arrays.toString(clock);
     }
+
+    public VectorClock(int nodeId, int[] clockValues) {
+        super(nodeId);
+        this.clock = clockValues;
+    }
+
+    public int[] getClockValues() {
+        return Arrays.copyOf(clock, clock.length);
+    }
+
+    public String getClockString() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < clock.length; i++) {
+            sb.append(clock[i]);
+            if (i < clock.length - 1) {
+                sb.append(" ");
+            }
+        }
+        return sb.toString();
+    }
 }
