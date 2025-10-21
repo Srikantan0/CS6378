@@ -25,17 +25,18 @@ public class TCPClient implements Runnable {
         }
     }
 
-    public void sendMessage(Node from, Node to, Socket socket) throws Exception
-    {
+    public void sendMessage(Node from, Node to, Socket socket) throws Exception {
         try {
             socket = new Socket(to.getHostName(), to.getPort());
-        } catch (Exception e) {
+        } catch (IOException ioe) {
             return;
         }
 
         from.incrementVectorClock();
         OutputStream os = socket.getOutputStream();
+        InputStream is = socket.getInputStream();
         ObjectOutputStream out = new ObjectOutputStream(os);
+        ObjectInputStream in = new ObjectInputStream(is);
 
         String message = "MSG from Node " + from.getNodeId() + " to " + to.getNodeId();
         Message msg = new Message(from.getNodeId(), to.getNodeId(), message);
@@ -43,9 +44,7 @@ public class TCPClient implements Runnable {
 
         out.writeObject(msg);
         out.flush();
-        System.out.println("sent request ::: to " + to.getNodeId());
-        InputStream is = socket.getInputStream();
-        ObjectInputStream in = new ObjectInputStream(is);
+
         Object ack = in.readObject();
         System.out.println("ACK'd': " + ack.toString());
 
@@ -68,7 +67,6 @@ public class TCPClient implements Runnable {
         Object ack = in.readObject();
         System.out.println("ACK for MARKER from Node " + to.getNodeId() + " : " + ack);
     }
-
     public void sendTerminate() throws Exception {
         try {
             Socket s = new Socket(to.getHostName(), to.getPort());
