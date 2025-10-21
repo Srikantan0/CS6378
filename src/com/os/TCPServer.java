@@ -4,6 +4,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.List;
 
 // listen on port of curr node for any incoming msg from any neighbor node
 // ack that you've recd a message
@@ -42,6 +43,21 @@ public class TCPServer implements Runnable {
                                 " from Node " + msg.fromNodeId +
                                 " : " + msg.messageInfo
                 );
+                if (msg.msgType == MessageType.STATE) {
+                    System.out.println("Node " + node.getNodeId() + " received STATE message from Node " + msg.fromNodeId);
+                    if (node.getNodeId() == 0 && msg.messageInfo instanceof Snapshot) {
+                        ChandyLamport cl = (ChandyLamport) node.getSnapshotProtocol();
+                        cl.addSnapshot(msg.fromNodeId, (Snapshot) msg.messageInfo);
+                    }
+                    return;
+                }
+
+                if (msg.msgType == MessageType.TERMINATE) {
+                    System.out.println("Node " + node.getNodeId() + " received TERMINATE signal. Shutting down.");
+                    ChandyLamport cl = (ChandyLamport) node.getSnapshotProtocol();
+                    cl.terminate();
+                    return;
+                }
                 if (msg.msgType == MessageType.MARKER) {
                     System.out.println("MARKER received by Node " + node.getNodeId() + " from Node " + msg.fromNodeId);
                     Node sender = node.getNeighbors().stream()
@@ -72,15 +88,30 @@ public class TCPServer implements Runnable {
                         }
                     } else {
                         System.out.println("Recorded in-transit message on channel " + msg.fromNodeId + "->" + node.getNodeId());
-                        node.recordIncomingMessage(msg.messageInfo.toString(), channelIdx);
+                        node.recordIncomingMessage((VectorClock) msg.messageInfo, channelIdx);
                     }
                     node.markChannelReceived(channelIdx);
                     if (node.isSnapshotComplete()) {
-                        System.out.println("Node " + node.getNodeId() + " snapshot completed");
-                        System.out.println("local state: " + node.getLocalSnapshot());
-                        System.out.println("channel states:");
-                        for (String s : node.getIncomingChannelStates()) {
-                            System.out.println("  " + s);
+                        System.out.println("Node " + node.getNodeId() + " snapshot completed. Sending to Node 0.");
+
+                        Snapshot localSnapshot = new Snapshot(
+                                node.getNodeId(),
+                                node.getCurrentSnapshotId(),
+                                node.getLocalSnapshot(),
+                                node.getIncomingChannelStates(),
+                                node.getState()
+                        );
+
+                        Node initiator = node.getNeighborById(0);
+                        if (initiator != null) {
+                            TCPClient client = new TCPClient(node, initiator, null);
+                            new Thread(() -> {
+                                try {
+                                    client.sendSnapshot(localSnapshot);
+                                } catch (Exception e) {
+                                    System.err.println("Error sending snapshot: " + e.getMessage());
+                                }
+                            }).start();
                         }
                         node.finishSnapshot();
                     }

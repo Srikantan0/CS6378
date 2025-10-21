@@ -17,37 +17,53 @@ public class Producer implements Runnable{
     @Override
     public void run() {
         final Random random = new Random();
-        if (currentNode.getState() != NodeState.ACTIVE) {
-            System.out.println("node "+currentNode.getNodeId()+" passive, cant send. ");
-            return;
-        }
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-        }
-        int numMessages = random.nextInt(maxPerActive - minPerActive + 1) + minPerActive;
-        List<Node> neighbors = currentNode.getNeighbors();
-
-        for (int i = 0; i < numMessages; i++) {
-            if (currentNode.getSentMessages() >= currentNode.getMaxNumber()) {
-                System.out.println("node " + currentNode.getNodeId() + " is permanently passive.");
-                break;
-            }
-
-            Node neighbor = neighbors.get(random.nextInt(neighbors.size()));
-            TCPClient client = new TCPClient(currentNode, neighbor, null);
-            Thread clientThread = new Thread(client);
-            clientThread.start();
-
-            if (i < numMessages - 1) {
+        while (currentNode.getSentMessages() < currentNode.getMaxNumber()) {
+            if (currentNode.getState() != NodeState.ACTIVE) {
                 try {
-                    Thread.sleep(minSendDelay);
-                } catch (InterruptedException ie) { }
+                     System.out.println("node "+currentNode.getNodeId()+" passive, cant send. ");
+                    Thread.sleep(100);
+                    continue;
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+            }
+            int remainingMessages = currentNode.getMaxNumber() - currentNode.getSentMessages();
+            int numMessages = random.nextInt(maxPerActive - minPerActive + 1) + minPerActive;
+            numMessages = Math.min(numMessages, remainingMessages);
+            List<Node> neighbors = currentNode.getNeighbors();
+
+            for (int i = 0; i < numMessages; i++) {
+                if (currentNode.getSentMessages() >= currentNode.getMaxNumber()) {
+                    System.out.println("node " + currentNode.getNodeId() + " is permanently passive.");
+                    break;
+                }
+
+                Node neighbor = neighbors.get(random.nextInt(neighbors.size()));
+                TCPClient client = new TCPClient(currentNode, neighbor, null);
+                Thread clientThread = new Thread(client);
+                clientThread.start();
+
+                if (i < numMessages - 1) {
+                    try {
+                        Thread.sleep(minSendDelay);
+                    } catch (InterruptedException ie) { }
+                }
+            }
+
+            currentNode.setState(NodeState.PASSIVE);
+            currentNode.resetSentActiveMessages();
+            System.out.println("Node " + currentNode.getNodeId() + " now passive.");
+
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
             }
         }
-
-        currentNode.setState(NodeState.PASSIVE);
-        currentNode.resetSentActiveMessages();
-        System.out.println("Node " + currentNode.getNodeId() + " now passive.");
     }
 }

@@ -11,7 +11,8 @@ import java.io.ByteArrayOutputStream;
 enum MessageType{
     APP,        // this and string should be matched i.e both will become same
     MARKER,     // init a snapshot with a marker
-    STATE       // record and send
+    STATE,       // record and send
+    TERMINATE
 };
 
 // Object to store message passing between nodes

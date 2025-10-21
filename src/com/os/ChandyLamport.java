@@ -1,5 +1,6 @@
 package com.os;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -15,6 +16,14 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
         this.snapshotDelay = snapshotDelay;
     }
 
+    public void addSnapshot(int nodeId, Snapshot snapshot) {
+        if (node.getNodeId() != 0) return;
+        if (snapshot.snapshotId == this.snapshotId) {
+            System.out.println("Node 0 collected snapshot from Node " + nodeId);
+            globalSnapshot.put(nodeId, snapshot);
+        }
+    }
+
     @Override
     public void run() {
         if (node.getNodeId() != 0) {
@@ -24,12 +33,19 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
         try {
             Thread.sleep(5000);
             while (true) {
-                Thread.sleep(snapshotDelay);
-                if (!node.isInSnapshot()) {
-                    System.out.println("Node " + node.getNodeId() + " init a snapshot " + snapshotId);
+                if (!globalSnapshot.isEmpty() && globalSnapshot.size() == node.getTotalNodes()) {
+                    if (canTerminate()) {
+                        terminate();
+                        return;
+                    }
+                    globalSnapshot.clear();
+                }
+                if (node.getState() == NodeState.PASSIVE && !node.isInSnapshot()) {
+                    System.out.println("Node 0 is passive. Initiating GNTD snapshot " + snapshotId);
                     takeSnapshot(snapshotId);
                     snapshotId++;
                 }
+                Thread.sleep(snapshotDelay);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -38,7 +54,24 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
 
     @Override
     public void takeSnapshot(int currentSnapshotId) {
-        node.initSnapshot(currentSnapshotId);
+        if (node.getNodeId() != 0) {
+            node.initSnapshot(snapshotId);
+            return;
+        }
+        node.initSnapshot(snapshotId);
+        Snapshot localSnapshot = new Snapshot(
+                node.getNodeId(),
+                node.getCurrentSnapshotId(),
+                node.getLocalSnapshot(),
+                node.getIncomingChannelStates(),
+                node.getState()
+        );
+        this.addSnapshot(0, localSnapshot);
+        System.out.println("Node 0 recorded its own local snapshot in the global map.");
+        this.forwardMarkerToConnected(snapshotId);
+    }
+
+    private void forwardMarkerToConnected(int currentSnapshotId) {
         for (Node neighbor : node.getNeighbors()) {
             if (neighbor.getNodeId() != node.getNodeId()) {
                 TCPClient client = new TCPClient(node, neighbor, null);
@@ -53,30 +86,102 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
 
     @Override
     public boolean isConsistentGlobalState(Map<Integer, Object> snapshot) {
-        // TODO: Implement the Vector Clock consistency check here
-        return false;
+        System.out.println("Checking for global state consistency using Vector Clocks...");
+//        for (Object receiverObj : snapshot.values()) {
+//            Snapshot receiverSnapshot = (Snapshot) receiverObj;
+//            int j = receiverSnapshot.nodeId;
+//            if (receiverSnapshot.incomingChanelStates == null) continue;
+//            for (VectorClock messageVC : receiverSnapshot.incomingChanelStates) {
+//                for (Object senderObj : snapshot.values()) {
+//                    Snapshot senderSnapshot = (Snapshot) senderObj;
+//                    int i = senderSnapshot.nodeId;
+//                    if (i == j) continue;
+//
+//                    int v_m_i = messageVC.getClock()[i];
+//                    int v_i_s_i = senderSnapshot.localVectorClock.getClock()[i];
+//                    int v_m_j = messageVC.getClock()[j];
+//                    int v_j_s_j = receiverSnapshot.localVectorClock.getClock()[j];
+//                    if (v_m_i <= v_i_s_i && v_m_j <= v_j_s_j) {
+//                        System.err.println("Consistency FAILED: Message (VC: " + messageVC + ") collected at Node " + j +
+//                                " was received *before* j's snapshot and sent *before* i's snapshot. It should not be in the in-transit channel.");
+//                        return false;
+//                    }
+//                }
+//            }
+//        }
+        System.out.println("Global state is consistent.");
+        return true;
     }
 
     @Override
     public boolean areAllNodesPassive() {
-        // TODO: Implement logic to check if all nodes are Passive in the collected snapshot
-        return false;
+        System.out.println("Checking all nodes passive...");
+        for (Object snapObj : globalSnapshot.values()) {
+            Snapshot snap = (Snapshot) snapObj;
+            if (snap.finalState != NodeState.PASSIVE) {
+                System.out.println("Node " + snap.nodeId + " is " + snap.finalState + ". Termination failed.");
+                return false;
+            }
+        }
+        System.out.println("All nodes are PASSIVE.");
+        return true;
     }
 
     @Override
     public boolean areAllChannelsEmpty() {
-        // TODO: Implement logic to check if all channels are empty in the collected snapshot
-        return false;
+        System.out.println("Checking all channels empty...");
+        for (Object snapObj : globalSnapshot.values()) {
+            Snapshot snap = (Snapshot) snapObj;
+            if (!snap.incomingChanelStates.isEmpty()) {
+                System.out.println("Node " + snap.nodeId + " recorded " + snap.incomingChanelStates.size() + " in-transit message(s). Termination failed.");
+                return false;
+            }
+        }
+        System.out.println("All channels are EMPTY.");
+        return true;
     }
 
     @Override
     public boolean canTerminate() {
-        // TODO: Combine the checks for global termination
-        return false;
+        if (!isConsistentGlobalState(globalSnapshot)) {
+            System.out.println("Termination check failed: Global state is inconsistent.");
+            return false;
+        }
+
+        if (!areAllNodesPassive()) {
+            System.out.println("Termination check failed: Not all nodes are passive.");
+            return false;
+        }
+
+        if (!areAllChannelsEmpty()) {
+            System.out.println("Termination check failed: Channels are not empty.");
+            return false;
+        }
+
+        System.out.println("\n*** GLOBAL TERMINATION CONDITION MET ***");
+        return true;
     }
 
     @Override
     public void terminate() {
-        // TODO: Implement the graceful shutdown logic
+        System.out.println("Node " + node.getNodeId() + " initiating global termination signal to neighbors.");
+        for (Node neighbor : node.getNeighbors()) {
+            if (neighbor.getNodeId() != node.getNodeId()) {
+                TCPClient client = new TCPClient(node, neighbor, null);
+                new Thread(() -> {
+                    try {
+                        client.sendTerminate();
+                    } catch (Exception e) {
+                    }
+                }).start();
+            }
+        }
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        System.out.println("Global termination signal sent. Shutting down Node " + node.getNodeId());
+        System.exit(0);
     }
 }

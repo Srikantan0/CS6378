@@ -29,6 +29,7 @@ public class Main {
         ProducerConsumer pc = new ProducerConsumer(producer, consumer);
         pc.start();
         SnapshotProtocol snapshotProc = new ChandyLamport(currNode, parser.getSnapshotDelay());
+        currNode.setSnapshotProtocol(snapshotProc);
         Thread snapshotThread = new Thread((Runnable) snapshotProc);
         snapshotThread.start();
         // snapshotProc = new ChandyLamport()

@@ -18,6 +18,14 @@ public class VectorClock extends Clock implements Serializable {
         Arrays.fill(this.clock, 0);
     }
 
+    public VectorClock(int nodeId, int totalNodes, int[] clockValues) {
+        super(nodeId);
+        if (clockValues.length != totalNodes) {
+            throw new IllegalArgumentException("Clock array size must match number of processes.");
+        }
+        this.clock = clockValues;
+    }
+
     @Override
     public void increment() {
         if (pid < 0 || pid >= clock.length)

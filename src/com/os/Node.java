@@ -18,15 +18,18 @@ public class Node implements Serializable {
     private VectorClock vectorClock;
 
     private VectorClock localSnapshot;
-    private List<String> incomingChannelStates = new ArrayList<>();
+    private List<VectorClock> incomingChannelStates = new ArrayList<>();
     private boolean[] markerReceived;
     private boolean isInSnapshot = false;
     private int currentSnapshotId = -1;
+    private final int totalNodes;
+    private SnapshotProtocol snapshotProtocol;
 
     Node(int nodeId, String hostName, int port, int totalNodes){
         this.nodeId = nodeId;
         this.hostName = hostName;
         this.port = port;
+        this.totalNodes = totalNodes;
         this.neighbors = new ArrayList<>();
         this.vectorClock = new VectorClock(nodeId, totalNodes);
         this.markerReceived = new boolean[0];
@@ -129,7 +132,7 @@ public class Node implements Serializable {
         localSnapshot = vectorClock;
     }
 
-    public void recordIncomingMessage(String msg, int channel) {
+    public void recordIncomingMessage(VectorClock msg, int channel) {
         if (!markerReceived[channel]) {
             incomingChannelStates.add(msg);
         }
@@ -148,7 +151,7 @@ public class Node implements Serializable {
         return localSnapshot;
     }
 
-    public List<String> getIncomingChannelStates() {
+    public List<VectorClock> getIncomingChannelStates() {
         return incomingChannelStates;
     }
 
@@ -157,5 +160,26 @@ public class Node implements Serializable {
     }
     public void finishSnapshot() {
         isInSnapshot = false;
+    }
+    public int getTotalNodes(){
+        return this.totalNodes;
+    }
+
+    public Node getNeighborById(int nodeId) {
+        return neighbors.stream()
+                .filter(n -> n.getNodeId() == nodeId)
+                .findFirst()
+                .orElse(null);
+    }
+
+    public int getCurrentSnapshotId(){
+        return this.currentSnapshotId;
+    }
+    public void setSnapshotProtocol(SnapshotProtocol sp) {
+        this.snapshotProtocol = sp;
+    }
+
+    public SnapshotProtocol getSnapshotProtocol() {
+        return this.snapshotProtocol;
     }
 }

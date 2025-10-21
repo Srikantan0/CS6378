@@ -67,4 +67,31 @@ public class TCPClient implements Runnable {
         Object ack = in.readObject();
         System.out.println("ACK for MARKER from Node " + to.getNodeId() + " : " + ack);
     }
+
+    public void sendTerminate() throws Exception {
+        try {
+            Socket s = new Socket(to.getHostName(), to.getPort());
+            ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
+            Message terminateMsg = new Message(MessageType.TERMINATE, from.getNodeId());
+
+            out.writeObject(terminateMsg);
+            out.flush();
+            s.close();
+        } catch (IOException e) {
+            System.err.println("Error sending TERMINATE signal to Node " + to.getNodeId() + ": " + e.getMessage());
+        }
+    }
+
+    public void sendSnapshot(Snapshot snapshot) throws Exception {
+        try (Socket s = new Socket(to.getHostName(), to.getPort());
+             ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream())) {
+            Message stateMsg = new Message(MessageType.STATE, from.getNodeId());
+            stateMsg.snapshotId = snapshot.snapshotId;
+            stateMsg.messageInfo = snapshot;
+            out.writeObject(stateMsg);
+            out.flush();
+        } catch (IOException e) {
+            System.err.println("Error sending snapshot to Node " + to.getNodeId() + ": " + e.getMessage());
+        }
+    }
 }
