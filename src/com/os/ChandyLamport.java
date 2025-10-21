@@ -87,57 +87,57 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
     @Override
     public boolean isConsistentGlobalState(Map<Integer, Object> snapshot) {
         System.out.println("Checking for global state consistency using Vector Clocks...");
-//        for (Object receiverObj : snapshot.values()) {
-//            Snapshot receiverSnapshot = (Snapshot) receiverObj;
-//            int j = receiverSnapshot.nodeId;
-//            if (receiverSnapshot.incomingChanelStates == null) continue;
-//            for (VectorClock messageVC : receiverSnapshot.incomingChanelStates) {
-//                for (Object senderObj : snapshot.values()) {
-//                    Snapshot senderSnapshot = (Snapshot) senderObj;
-//                    int i = senderSnapshot.nodeId;
-//                    if (i == j) continue;
-//
-//                    int v_m_i = messageVC.getClock()[i];
-//                    int v_i_s_i = senderSnapshot.localVectorClock.getClock()[i];
-//                    int v_m_j = messageVC.getClock()[j];
-//                    int v_j_s_j = receiverSnapshot.localVectorClock.getClock()[j];
-//                    if (v_m_i <= v_i_s_i && v_m_j <= v_j_s_j) {
-//                        System.err.println("Consistency FAILED: Message (VC: " + messageVC + ") collected at Node " + j +
-//                                " was received *before* j's snapshot and sent *before* i's snapshot. It should not be in the in-transit channel.");
-//                        return false;
-//                    }
-//                }
-//            }
-//        }
+        for (Object receiverObj : snapshot.values()) {
+            Snapshot receiverSnapshot = (Snapshot) receiverObj;
+            int j = receiverSnapshot.nodeId;
+            if (receiverSnapshot.incomingChanelStates == null) continue;
+            for (VectorClock messageVC : receiverSnapshot.incomingChanelStates) {
+                for (Object senderObj : snapshot.values()) {
+                    Snapshot senderSnapshot = (Snapshot) senderObj;
+                    int i = senderSnapshot.nodeId;
+                    if (i == j) continue;
+
+                    int v_m_i = messageVC.getClock()[i];
+                    int v_i_s_i = senderSnapshot.localVectorClock.getClock()[i];
+                    int v_m_j = messageVC.getClock()[j];
+                    int v_j_s_j = receiverSnapshot.localVectorClock.getClock()[j];
+                    if (v_m_i <= v_i_s_i && v_m_j <= v_j_s_j) {
+                        System.err.println("Consistency FAILED: Message (VC: " + messageVC + ") collected at Node " + j +
+                                " was received *before* j's snapshot and sent *before* i's snapshot. It should not be in the in-transit channel.");
+                        return false;
+                    }
+                }
+            }
+        }
         System.out.println("Global state is consistent.");
         return true;
     }
 
     @Override
     public boolean areAllNodesPassive() {
-        System.out.println("Checking all nodes passive...");
-        for (Object snapObj : globalSnapshot.values()) {
-            Snapshot snap = (Snapshot) snapObj;
-            if (snap.finalState != NodeState.PASSIVE) {
-                System.out.println("Node " + snap.nodeId + " is " + snap.finalState + ". Termination failed.");
-                return false;
+        for (Object obj : globalSnapshot.values()) {
+            if (obj instanceof Snapshot) {
+                Snapshot snap = (Snapshot) obj;
+                if (snap.finalState != NodeState.PASSIVE) {
+                    System.out.println("Node " + snap.nodeId + " is not passive (State: " + snap.finalState + ")");
+                    return false;
+                }
             }
         }
-        System.out.println("All nodes are PASSIVE.");
         return true;
     }
 
     @Override
-    public boolean areAllChannelsEmpty() {
-        System.out.println("Checking all channels empty...");
-        for (Object snapObj : globalSnapshot.values()) {
-            Snapshot snap = (Snapshot) snapObj;
-            if (!snap.incomingChanelStates.isEmpty()) {
-                System.out.println("Node " + snap.nodeId + " recorded " + snap.incomingChanelStates.size() + " in-transit message(s). Termination failed.");
-                return false;
+    public boolean areAllChannelsEmpty(){
+        for (Object obj : globalSnapshot.values()) {
+            if (obj instanceof Snapshot) {
+                Snapshot snap = (Snapshot) obj;
+                if (!snap.incomingChanelStates.isEmpty()) {
+                    System.out.println("Node " + snap.nodeId + " recorded " + snap.incomingChanelStates.size() + " in-transit messages.");
+                    return false;
+                }
             }
         }
-        System.out.println("All channels are EMPTY.");
         return true;
     }
 

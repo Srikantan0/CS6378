@@ -15,6 +15,7 @@ public class Main {
 
         Node currNode = parser.getNodeById(currNodeId);
         currNode.initClock(parser.getNumOfNodes());
+        currNode.setState(NodeState.ACTIVE);
         if(currNode == null){
             System.out.println("Input node doesnt match configuration. please check");
             return;

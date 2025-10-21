@@ -32,9 +32,11 @@ public class TCPServer implements Runnable {
 
         while (true) {
             Socket socket = serverSocket.accept();
-            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+            out.flush();
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
             Object obj = in.readObject();
+            System.out.println("hello world");
 
             if (obj instanceof Message) {
                 Message msg = (Message) obj;

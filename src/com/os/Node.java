@@ -69,6 +69,7 @@ public class Node implements Serializable {
     }
 
     public void setState(NodeState state) {
+        System.out.println("setting node state as" + state.toString());
         this.state = state;
     }
 
