@@ -24,6 +24,14 @@ public class Node implements Serializable {
     private int currentSnapshotId = -1;
     private final int totalNodes;
     private SnapshotProtocol snapshotProtocol;
+    private volatile boolean isHalting = false;
+
+    public boolean isHalting() {
+        return isHalting;
+    }
+    public void setHalting(boolean halting) {
+        isHalting = halting;
+    }
 
     Node(int nodeId, String hostName, int port, int totalNodes){
         this.nodeId = nodeId;
@@ -182,5 +190,10 @@ public class Node implements Serializable {
 
     public SnapshotProtocol getSnapshotProtocol() {
         return this.snapshotProtocol;
+    }
+
+    public void shutdownGracefully() {
+        System.out.println("Node " + nodeId + " is shutting down...");
+        System.exit(0);
     }
 }

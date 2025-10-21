@@ -164,6 +164,7 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
 
     @Override
     public void terminate() {
+        node.setHalting(true);
         System.out.println("Node " + node.getNodeId() + " initiating global termination signal to neighbors.");
         for (Node neighbor : node.getNeighbors()) {
             if (neighbor.getNodeId() != node.getNodeId()) {

@@ -4,7 +4,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.List;
 
 // listen on port of curr node for any incoming msg from any neighbor node
 // ack that you've recd a message
@@ -126,6 +125,24 @@ public class TCPServer implements Runnable {
                 }
                 if (msg.msgType == MessageType.APP) {
                     node.updateClock((VectorClock) msg.messageInfo);
+                }
+                if (msg.msgType == MessageType.TERMINATE) {
+                    if (!node.isHalting()) {
+                        node.setHalting(true);
+                        System.out.println("Node " + node.getNodeId() + " received TERMINATE signal. Propagating and exiting.");
+                        for (Node neighbor : node.getNeighbors()) {
+                            if (neighbor.getNodeId() != node.getNodeId()) {
+                                TCPClient client = new TCPClient(node, neighbor, null);
+                                new Thread(() -> {
+                                    try {
+                                        client.sendTerminate();
+                                    } catch (Exception e) {}
+                                }).start();
+                            }
+                        }
+                        node.shutdownGracefully();
+                    }
+                    return;
                 }
             }
 
