@@ -34,9 +34,6 @@ public class Main {
         currNode.setSnapshotProtocol(snapshotProc);
         Thread snapshotThread = new Thread((Runnable) snapshotProc);
         snapshotThread.start();
-        // snapshotProc = new ChandyLamport()
-        // snapshotProc.start()
         Runtime.getRuntime().addShutdownHook(new Thread(pc::close));
-        //Runtime.getRuntime().addShutdownHook(new Thread(snapshotProc::close));
     }
 }
