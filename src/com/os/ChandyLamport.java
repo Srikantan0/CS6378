@@ -100,9 +100,7 @@ public class ChandyLamport implements SnapshotProtocol, Runnable {
                 int v_i_s_i = senderSnapshot.localVectorClock.getClock()[i];
 
                 if (v_m_i <= v_i_s_i) {
-                    System.out.println("inconsistent clocks found: Message from Node " + i + " to Node " + j +
-                            " violates consistency (C(m)_i=" + v_m_i + " <= V_i(S_i)_i=" + v_i_s_i + ")");
-                    System.out.println("inconsistent");
+                    System.out.println("inconsistent clocks found: Message from Node " + i + " to Node " + j);
                     return false;
                 }
             }

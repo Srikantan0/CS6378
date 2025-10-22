@@ -197,7 +197,7 @@ public class Node implements Serializable {
 
     public void addCompletedSnapshot(VectorClock vc) {
         try{
-            if(vc == null) System.out.println("siohdf");
+            if(vc == null) System.out.println("incoming vc null, npe");
         }catch (Exception e){
             System.out.println(e);
         }
